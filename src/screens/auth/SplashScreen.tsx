@@ -56,7 +56,7 @@ export default function SplashScreen() {
       ]),
     ]).start(() => {
       // Navega para Login após animação
-      setTimeout(() => navigation.replace('Login'), 300);
+      setTimeout(() => navigation.replace('Onboarding1'), 300);
     });
   }, []);
 
