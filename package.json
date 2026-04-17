@@ -18,7 +18,8 @@
     "react-native-gesture-handler": "^2.16.2",
     "react-native-safe-area-context": "^5.7.0",
     "react-native-screens": "^3.27.0",
-    "react-native-vector-icons": "^10.3.0"
+    "react-native-vector-icons": "^10.3.0",
+    "react-native-webview": "^13.16.1"
   },
   "devDependencies": {
     "@babel/core": "^7.20.0",

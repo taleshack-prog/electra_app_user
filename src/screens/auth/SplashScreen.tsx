@@ -11,7 +11,7 @@ const { width, height } = Dimensions.get('window');
 // Simula verificação de sessão
 // Depois conecta ao Supabase: supabase.auth.getSession()
 const checkSession = async (): Promise<boolean> => {
-  return false; // false = novo usuário, true = já cadastrado
+  return true; // true = já cadastrado → vai direto para Home
 };
 
 export default function SplashScreen() {
