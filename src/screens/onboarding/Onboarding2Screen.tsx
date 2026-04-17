@@ -75,7 +75,7 @@ export default function Onboarding2Screen() {
         <TouchableOpacity
           style={styles.btnPrimary}
           activeOpacity={0.85}
-          onPress={() => navigation.navigate('Login')}
+          onPress={() => navigation.navigate('Cadastro')}
         >
           <Text style={styles.btnText}>Começar</Text>
           <Text style={styles.btnArrow}>→</Text>

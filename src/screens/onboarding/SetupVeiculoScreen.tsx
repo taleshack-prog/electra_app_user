@@ -236,7 +236,7 @@ export default function SetupVeiculoScreen() {
             activeOpacity={0.85}
             onPress={() => {
               if (modelo && placa) adicionarVeiculo();
-              navigation.navigate('SetupAutonomia');
+              navigation.replace('MainTabs');
             }}
           >
             <Text style={styles.btnText}>
@@ -248,7 +248,7 @@ export default function SetupVeiculoScreen() {
           {veiculos.length > 0 && (
             <TouchableOpacity
               style={styles.btnSkip}
-              onPress={() => navigation.navigate('SetupAutonomia')}
+              onPress={() => navigation.replace('MainTabs')}
             >
               <Text style={styles.btnSkipText}>Continuar sem adicionar outro</Text>
             </TouchableOpacity>
