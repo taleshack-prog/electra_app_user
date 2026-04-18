@@ -20,7 +20,9 @@ import SOSScreen            from '../screens/sos/SOSScreen';
 import ConfirmarSocorroScreen from '../screens/sos/ConfirmarSocorroScreen';
 import TrackingScreen       from '../screens/sos/TrackingScreen';
 import ConcluidoScreen      from '../screens/sos/ConcluidoScreen';
-import RankingScreen        from '../screens/sos/RankingScreen';
+import RankingScreen from '../screens/sos/RankingScreen';
+import SessaoRecargaScreen from '../screens/main/SessaoRecargaScreen';
+import CheckoutRecargaScreen from '../screens/main/CheckoutRecargaScreen';
 
 export type RootStackParamList = {
   Splash: undefined;
@@ -37,6 +39,8 @@ export type RootStackParamList = {
   Tracking: undefined;
   Concluido: undefined;
   Ranking: undefined;
+  SessaoRecarga: undefined;
+  CheckoutRecarga: undefined;
 };
 
 export type TabParamList = {
@@ -140,7 +144,9 @@ export function AppNavigator() {
         <Stack.Screen name="ConfirmarSocorro" component={ConfirmarSocorroScreen} options={{ animation: 'slide_from_bottom' }} />
         <Stack.Screen name="Tracking"         component={TrackingScreen} />
         <Stack.Screen name="Concluido"        component={ConcluidoScreen} />
-        <Stack.Screen name="Ranking"          component={RankingScreen} />
+        <Stack.Screen name="Ranking"           component={RankingScreen} />
+        <Stack.Screen name="SessaoRecarga"    component={SessaoRecargaScreen} options={{ animation: 'slide_from_bottom' }} />
+        <Stack.Screen name="CheckoutRecarga"  component={CheckoutRecargaScreen} options={{ animation: 'slide_from_bottom' }} />
       </Stack.Navigator>
     </NavigationContainer>
   );
