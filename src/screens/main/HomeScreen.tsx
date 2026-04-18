@@ -5,6 +5,7 @@ import {
 } from 'react-native';
 import { WebView } from 'react-native-webview';
 import { useNavigation } from '@react-navigation/native';
+import { ElectraVoice } from '../../components/voice/ElectraVoice';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../navigation';
 
@@ -228,6 +229,11 @@ export default function HomeScreen() {
 
         <View style={{ height: 16 }} />
       </ScrollView>
+
+      {/* IA de Voz ELECTRA */}
+      <View style={styles.voiceWrap}>
+        <ElectraVoice />
+      </View>
     </View>
   );
 }
@@ -295,4 +301,5 @@ const styles = StyleSheet.create({
   sosSub:      { fontFamily: 'DMSans-Regular', fontSize: 12, color: 'rgba(240,244,255,0.4)' },
   sosBtnRight: { width: 64, height: 44, backgroundColor: '#FF3B5C', borderRadius: 12, alignItems: 'center', justifyContent: 'center', shadowColor: '#FF3B5C', shadowOpacity: 0.5, shadowRadius: 12, elevation: 8 },
   sosBtnText:  { fontFamily: 'Syne-Bold', fontSize: 16, color: '#fff', letterSpacing: 1 },
+  voiceWrap:   { position: 'absolute', bottom: 90, right: 16, zIndex: 999 },
 });
