@@ -69,7 +69,7 @@ function TabBar({ state, navigation }: any) {
           return (
             <TouchableOpacity
               key={tab.name}
-              onPress={() => navigation.navigate(tab.name)}
+              onPress={() => tab.name === 'SOS' ? navigation.navigate('ConfirmarSocorro') : navigation.navigate(tab.name)}
               activeOpacity={0.8}
               style={styles.sosWrap}
             >
@@ -83,7 +83,7 @@ function TabBar({ state, navigation }: any) {
         return (
           <TouchableOpacity
             key={tab.name}
-            onPress={() => navigation.navigate(tab.name)}
+            onPress={() => tab.name === 'SOS' ? navigation.navigate('ConfirmarSocorro') : navigation.navigate(tab.name)}
             activeOpacity={0.8}
             style={styles.tabItem}
           >
