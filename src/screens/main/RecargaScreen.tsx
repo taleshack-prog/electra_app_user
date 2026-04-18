@@ -120,6 +120,9 @@ export default function RecargaScreen() {
         {/* ABA Histórico */}
         {aba === 'historico' && (
           <Animated.View style={{ opacity: fadeAnim }}>
+            <TouchableOpacity style={styles.voltarBtn} onPress={() => setAba('qr')}>
+              <Text style={styles.voltarText}>← Voltar ao QR</Text>
+            </TouchableOpacity>
             {HISTORICO.map(h => (
               <View key={h.id} style={styles.historicoCard}>
                 <View style={styles.historicoTop}>
@@ -163,6 +166,9 @@ export default function RecargaScreen() {
         {/* ABA Status */}
         {aba === 'status' && (
           <Animated.View style={{ opacity: fadeAnim }}>
+            <TouchableOpacity style={styles.voltarBtn} onPress={() => setAba('qr')}>
+              <Text style={styles.voltarText}>← Voltar ao QR</Text>
+            </TouchableOpacity>
             <View style={styles.statsCard}>
               <Text style={styles.sectionLabel}>TOTAL ACUMULADO</Text>
               <View style={styles.statsGrid}>
@@ -305,4 +311,6 @@ const styles = StyleSheet.create({
   favNome:    { fontFamily: 'Syne-Bold', fontSize: 14, color: '#F0F4FF' },
   favSub:     { fontFamily: 'DMSans-Regular', fontSize: 11, color: 'rgba(240,244,255,0.4)', marginTop: 2 },
   favCount:   { fontFamily: 'Syne-Bold', fontSize: 20, color: '#00E5FF' },
+  voltarBtn:  { paddingVertical: 10, paddingHorizontal: 4, marginBottom: 16 },
+  voltarText: { fontFamily: 'DMSans-Regular', fontSize: 15, color: '#00E5FF' },
 });
