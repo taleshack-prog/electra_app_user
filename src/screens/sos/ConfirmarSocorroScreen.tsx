@@ -36,8 +36,12 @@ export default function ConfirmarSocorroScreen() {
   }, []);
 
   const handleConfirmar = () => {
+    if (confirmando) return;
     setConfirmando(true);
-    setTimeout(() => navigation.navigate('Tracking'), 1500);
+    setTimeout(() => {
+      setConfirmando(false);
+      navigation.navigate('Tracking');
+    }, 1500);
   };
 
   return (
