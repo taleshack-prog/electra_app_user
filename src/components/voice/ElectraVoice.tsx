@@ -1,4 +1,4 @@
-import React, { useRef, useState, useEffect } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import {
   View, Text, TouchableOpacity, StyleSheet,
   Animated, Modal, NativeModules, Alert,
@@ -6,30 +6,40 @@ import {
 
 const { SpeechModule } = NativeModules;
 
+import { ANTHROPIC_KEY } from '../../config/keys';
+const ANTHROPIC_API_KEY = ANTHROPIC_KEY;
+
+const SYSTEM_PROMPT = `Você é a ELECTRA, assistente de voz inteligente de um app de carregamento de veículos elétricos no Brasil.
+
+CONTEXTO DO USUÁRIO:
+- Nome: João Costa
+- Veículo principal: BYD Seal 03
+- Bateria atual: 42%
+- Autonomia estimada: 168 km
+- Localização: São Paulo, SP
+- Ranking: #4 com 2.840 pontos
+- Nível: Ouro
+
+ESTAÇÕES PRÓXIMAS:
+- Eletroposto Central: 1,2km, 150kW DC, R$3,20/kWh, 3 vagas livres
+- BYD Charge Hub: 2,7km, 22kW AC, R$2,10/kWh, ocupado
+- EV Station Plus: 3,1km, 50kW DC, R$2,80/kWh, 2 vagas livres
+
+SERVIÇOS DISPONÍVEIS:
+- Recarga nas estações acima
+- SOS Rescue: resgatista a ~2,3km, ~8 minutos
+- Marketplace integrado nas estações
+- Sistema de pontos e conquistas
+
+INSTRUÇÕES:
+- Responda SEMPRE em português brasileiro
+- Seja direta, útil e amigável
+- Respostas curtas (máximo 3 frases) pois serão lidas em voz alta
+- Use dados reais do contexto acima
+- Se o usuário precisar de socorro, instrua-o a usar o botão SOS
+- Não invente informações que não estão no contexto`;
+
 type EstadoIA = 'idle' | 'escutando' | 'processando' | 'falando';
-
-const RESPOSTAS: Record<string, string> = {
-  'posto':     'Encontrei 3 postos próximos. O mais perto é o Eletroposto Central, a 1 vírgula 2 quilômetros.',
-  'bateria':   'Sua bateria está em 42 por cento, com autonomia de 168 quilômetros.',
-  'socorro':   'Iniciando chamado de socorro. Resgatista mais próximo a 2 vírgula 3 quilômetros, tempo estimado 8 minutos.',
-  'recarga':   'Para iniciar a recarga, escaneie o QR Code no conector da estação.',
-  'ranking':   'Você está em quarto lugar com 2840 pontos. Faltam 1070 pontos para o nível Mestre.',
-  'ajuda':     'Posso ajudar com: posto próximo, verificar bateria, chamar socorro, iniciar recarga ou ver seu ranking.',
-  'olá':       'Olá! Eu sou a ELECTRA, sua assistente de mobilidade elétrica. Como posso ajudar?',
-  'oi':        'Oi! Em que posso ajudar você hoje?',
-  'obrigado':  'De nada! Estou sempre aqui para ajudar.',
-  'distância': 'A estação mais próxima fica a 1 vírgula 2 quilômetros. Quer que eu trace a rota?',
-  'preço':     'O preço médio nas estações próximas é de 3 reais e 20 centavos por quilowatt hora.',
-  'autonomia': 'Com 42 por cento de bateria você tem aproximadamente 168 quilômetros de autonomia.',
-};
-
-const processarComando = (texto: string): string => {
-  const t = texto.toLowerCase();
-  for (const [chave, resp] of Object.entries(RESPOSTAS)) {
-    if (t.includes(chave)) return resp;
-  }
-  return 'Não entendi completamente. Tente dizer: posto próximo, minha bateria, preciso de socorro, ou diga ajuda para ver todas as opções.';
-};
 
 export const ElectraVoice: React.FC = () => {
   const [estado, setEstado]             = useState<EstadoIA>('idle');
@@ -37,9 +47,8 @@ export const ElectraVoice: React.FC = () => {
   const [resposta, setResposta]         = useState('');
   const [modalVisivel, setModalVisivel] = useState(false);
 
-  const pulseAnim  = useRef(new Animated.Value(1)).current;
-  const glowAnim   = useRef(new Animated.Value(0)).current;
-  const pulseLoop  = useRef<Animated.CompositeAnimation | null>(null);
+  const pulseAnim = useRef(new Animated.Value(1)).current;
+  const pulseLoop = useRef<Animated.CompositeAnimation | null>(null);
 
   useEffect(() => {
     return () => { SpeechModule?.stop(); };
@@ -51,16 +60,43 @@ export const ElectraVoice: React.FC = () => {
       Animated.timing(pulseAnim, { toValue: 1,    duration: 600, useNativeDriver: true }),
     ]));
     pulseLoop.current.start();
-    Animated.loop(Animated.sequence([
-      Animated.timing(glowAnim, { toValue: 1, duration: 800, useNativeDriver: true }),
-      Animated.timing(glowAnim, { toValue: 0, duration: 800, useNativeDriver: true }),
-    ])).start();
   };
 
   const pararPulso = () => {
     pulseLoop.current?.stop();
     pulseAnim.setValue(1);
-    glowAnim.setValue(0);
+  };
+
+  const chamarClaude = async (texto: string): Promise<string> => {
+    try {
+      const response = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': ANTHROPIC_API_KEY,
+          'anthropic-version': '2023-06-01',
+          'anthropic-dangerous-direct-browser-access': 'true',
+        },
+        body: JSON.stringify({
+          model: 'claude-haiku-4-5-20251001',
+          max_tokens: 150,
+          system: SYSTEM_PROMPT,
+          messages: [{ role: 'user', content: texto }],
+        }),
+      });
+
+      const data = await response.json();
+
+      console.log('CLAUDE RESPONSE:', JSON.stringify(data));
+      if (data.content && data.content[0] && data.content[0].text) {
+        return data.content[0].text;
+      }
+
+      return 'Desculpe, não consegui processar sua solicitação. Tente novamente.';
+    } catch (error: any) {
+      console.log('CLAUDE ERROR:', error);
+      return 'Sem conexão com a internet. Verifique sua conexão e tente novamente.';
+    }
   };
 
   const iniciarEscuta = async () => {
@@ -68,6 +104,7 @@ export const ElectraVoice: React.FC = () => {
       Alert.alert('Erro', 'Módulo de voz não disponível');
       return;
     }
+
     setEstado('escutando');
     setTranscricao('');
     setResposta('');
@@ -80,20 +117,20 @@ export const ElectraVoice: React.FC = () => {
       setTranscricao(texto);
       setEstado('processando');
 
-      setTimeout(async () => {
-        const resp = processarComando(texto);
-        setResposta(resp);
-        setEstado('falando');
+      // Chama o Claude
+      const respostaClaude = await chamarClaude(texto);
+      setResposta(respostaClaude);
+      setEstado('falando');
 
-        try {
-          await SpeechModule.speak(resp);
-        } catch {}
+      // Fala a resposta
+      try {
+        await SpeechModule.speak(respostaClaude);
+      } catch {}
 
-        setTimeout(() => {
-          setEstado('idle');
-          setTimeout(() => setModalVisivel(false), 1000);
-        }, 2000);
-      }, 500);
+      setTimeout(() => {
+        setEstado('idle');
+        setTimeout(() => setModalVisivel(false), 1000);
+      }, 2000);
 
     } catch (e: any) {
       pararPulso();
@@ -113,13 +150,11 @@ export const ElectraVoice: React.FC = () => {
     idle: '#00E5FF', escutando: '#FF3B5C', processando: '#FFB800', falando: '#00FF87',
   };
   const LABEL: Record<EstadoIA, string> = {
-    idle: 'Diga "Ei ELECTRA"', escutando: 'Ouvindo você...', processando: 'Processando...', falando: 'ELECTRA respondendo',
+    idle: 'Diga "Ei ELECTRA"', escutando: 'Ouvindo você...', processando: 'Consultando IA...', falando: 'ELECTRA respondendo',
   };
   const ICON: Record<EstadoIA, string> = {
     idle: '🎙', escutando: '🔴', processando: '⚡', falando: '🔊',
   };
-
-  const glowOpacity = glowAnim.interpolate({ inputRange: [0,1], outputRange: [0.2, 0.6] });
 
   return (
     <>
@@ -130,20 +165,18 @@ export const ElectraVoice: React.FC = () => {
             {/* Header */}
             <View style={styles.header}>
               <View style={{ flexDirection:'row', alignItems:'center', gap:8 }}>
-                <Animated.View style={[styles.headerDot, { backgroundColor: COR[estado], opacity: glowOpacity }]} />
-                <Text style={[styles.headerTitle, { color: COR[estado] }]}>⚡ ELECTRA</Text>
+                <Animated.View style={[styles.headerDot, { backgroundColor: COR[estado], transform:[{scale: pulseAnim}] }]} />
+                <Text style={[styles.headerTitle, { color: COR[estado] }]}>⚡ ELECTRA IA</Text>
               </View>
               <TouchableOpacity onPress={fechar} hitSlop={{top:12,bottom:12,left:12,right:12}}>
                 <Text style={styles.closeBtn}>✕</Text>
               </TouchableOpacity>
             </View>
 
-            {/* Ícone central animado */}
+            {/* Ícone central */}
             <View style={styles.iconArea}>
-              {/* Anéis */}
-              <Animated.View style={[styles.ring, styles.ring1, { borderColor: COR[estado], opacity: glowOpacity, transform:[{scale: pulseAnim}] }]} />
-              <Animated.View style={[styles.ring, styles.ring2, { borderColor: COR[estado], opacity: glowOpacity }]} />
-
+              <Animated.View style={[styles.ring, styles.ring1, { borderColor: COR[estado], opacity: 0.3, transform:[{scale: pulseAnim}] }]} />
+              <Animated.View style={[styles.ring, styles.ring2, { borderColor: COR[estado], opacity: 0.15 }]} />
               <Animated.View style={[
                 styles.iconCircle,
                 { backgroundColor: COR[estado] + '22', borderColor: COR[estado] },
@@ -164,7 +197,7 @@ export const ElectraVoice: React.FC = () => {
               </View>
             )}
 
-            {/* Resposta */}
+            {/* Resposta Claude */}
             {resposta !== '' && (
               <View style={[styles.respBox, { borderColor: COR['falando'] + '44' }]}>
                 <Text style={[styles.respLabel, { color: COR['falando'] }]}>⚡ ELECTRA</Text>
@@ -172,7 +205,7 @@ export const ElectraVoice: React.FC = () => {
               </View>
             )}
 
-            {/* Sugestões quando idle */}
+            {/* Sugestões */}
             {estado === 'escutando' && transcricao === '' && (
               <View style={styles.sugestoesWrap}>
                 <Text style={styles.sugLabel}>TENTE DIZER</Text>
@@ -183,6 +216,13 @@ export const ElectraVoice: React.FC = () => {
                     </View>
                   ))}
                 </View>
+              </View>
+            )}
+
+            {/* Loading Claude */}
+            {estado === 'processando' && (
+              <View style={styles.loadingBox}>
+                <Text style={styles.loadingText}>Consultando Claude AI...</Text>
               </View>
             )}
           </View>
@@ -235,6 +275,9 @@ const styles = StyleSheet.create({
   sugestoesRow:  { flexDirection:'row', flexWrap:'wrap', gap:6 },
   sugChip:       { backgroundColor:'rgba(255,255,255,0.05)', borderRadius:20, paddingHorizontal:12, paddingVertical:6, borderWidth:1, borderColor:'rgba(255,255,255,0.08)' },
   sugText:       { fontFamily:'DMSans-Regular', fontSize:12, color:'rgba(240,244,255,0.45)' },
+
+  loadingBox:  { alignItems:'center', padding:10 },
+  loadingText: { fontFamily:'JetBrainsMono-Regular', fontSize:11, color:'#FFB800', letterSpacing:1 },
 
   floatWrap:  { alignItems:'center' },
   floatBtn:   { width:56, height:56, borderRadius:28, alignItems:'center', justifyContent:'center', shadowColor:'#00E5FF', shadowOpacity:0.5, shadowRadius:16, elevation:10 },
