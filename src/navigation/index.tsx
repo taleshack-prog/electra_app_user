@@ -26,6 +26,7 @@ import CheckoutRecargaScreen from '../screens/main/CheckoutRecargaScreen';
 import MeusVeiculosScreen from '../screens/perfil/MeusVeiculosScreen';
 import PagamentosScreen from '../screens/perfil/PagamentosScreen';
 import NotificacoesScreen from '../screens/perfil/NotificacoesScreen';
+import PrivacidadeScreen from '../screens/perfil/PrivacidadeScreen';
 
 export type RootStackParamList = {
   Splash: undefined;
@@ -46,6 +47,7 @@ export type RootStackParamList = {
   MeusVeiculos: undefined;
   Pagamentos: undefined;
   Notificacoes: undefined;
+  Privacidade: undefined;
   CheckoutRecarga: undefined;
 };
 
@@ -151,6 +153,7 @@ export function AppNavigator() {
         <Stack.Screen name="Tracking"         component={TrackingScreen} />
         <Stack.Screen name="Concluido"        component={ConcluidoScreen} />
         <Stack.Screen name="Ranking"           component={RankingScreen} />
+        <Stack.Screen name="Privacidade" component={PrivacidadeScreen} />
         <Stack.Screen name="Notificacoes" component={NotificacoesScreen} />
         <Stack.Screen name="Pagamentos" component={PagamentosScreen} />
         <Stack.Screen name="MeusVeiculos"     component={MeusVeiculosScreen} />
