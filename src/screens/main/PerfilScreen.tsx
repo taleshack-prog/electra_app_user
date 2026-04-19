@@ -29,7 +29,7 @@ const MENU_ITEMS = [
   { icon: '🔔', label: 'Notificações', sub: 'Alertas ativos', rota: 'Notificacoes' },
   { icon: '🛡', label: 'Privacidade', sub: 'LGPD · seus dados', rota: 'Privacidade' },
   { icon: '❓', label: 'Suporte', sub: 'Falar com a equipe', rota: 'Suporte' },
-  { icon: '📄', label: 'Termos de Uso',        sub: 'Versão 2.1' },
+  { icon: '📄', label: 'Termos de Uso', sub: 'Versão 2.1', rota: 'TermosUso' },
 ];
 
 export default function PerfilScreen() {
