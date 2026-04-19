@@ -24,6 +24,7 @@ import RankingScreen from '../screens/sos/RankingScreen';
 import SessaoRecargaScreen from '../screens/main/SessaoRecargaScreen';
 import CheckoutRecargaScreen from '../screens/main/CheckoutRecargaScreen';
 import MeusVeiculosScreen from '../screens/perfil/MeusVeiculosScreen';
+import PagamentosScreen from '../screens/perfil/PagamentosScreen';
 
 export type RootStackParamList = {
   Splash: undefined;
@@ -42,6 +43,7 @@ export type RootStackParamList = {
   Ranking: undefined;
   SessaoRecarga: undefined;
   MeusVeiculos: undefined;
+  Pagamentos: undefined;
   CheckoutRecarga: undefined;
 };
 
@@ -147,6 +149,7 @@ export function AppNavigator() {
         <Stack.Screen name="Tracking"         component={TrackingScreen} />
         <Stack.Screen name="Concluido"        component={ConcluidoScreen} />
         <Stack.Screen name="Ranking"           component={RankingScreen} />
+        <Stack.Screen name="Pagamentos" component={PagamentosScreen} />
         <Stack.Screen name="MeusVeiculos"     component={MeusVeiculosScreen} />
         <Stack.Screen name="SessaoRecarga"    component={SessaoRecargaScreen} options={{ animation: 'slide_from_bottom' }} />
         <Stack.Screen name="CheckoutRecarga"  component={CheckoutRecargaScreen} options={{ animation: 'slide_from_bottom' }} />
