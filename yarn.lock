@@ -4467,6 +4467,11 @@ react-is@^16.7.0:
 react-is@^17.0.1:
   version "17.0.2"
 
+react-native-config@^1.6.1:
+  version "1.6.1"
+  resolved "https://registry.npmjs.org/react-native-config/-/react-native-config-1.6.1.tgz"
+  integrity sha512-HvKtxr6/Tq3iMdFx5REYZsjCtPi0RxQOMCs15+DqrUPTNFtWHuEuh+zw7fJp+dmuO79YMfdtlsPWIGTHtaXwjg==
+
 react-native-gesture-handler@^2.16.2:
   version "2.16.2"
   resolved "https://registry.npmjs.org/react-native-gesture-handler/-/react-native-gesture-handler-2.16.2.tgz"

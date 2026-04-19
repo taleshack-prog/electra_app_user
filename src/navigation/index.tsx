@@ -29,6 +29,7 @@ import NotificacoesScreen from '../screens/perfil/NotificacoesScreen';
 import PrivacidadeScreen from '../screens/perfil/PrivacidadeScreen';
 import SuporteScreen from '../screens/perfil/SuporteScreen';
 import TermosUsoScreen from '../screens/perfil/TermosUsoScreen';
+import PlanosSeguroScreen from '../screens/perfil/PlanosSeguroScreen';
 
 export type RootStackParamList = {
   Splash: undefined;
@@ -52,6 +53,7 @@ export type RootStackParamList = {
   Privacidade: undefined;
   Suporte: undefined;
   TermosUso: undefined;
+  PlanosSeguro: undefined;
   CheckoutRecarga: undefined;
 };
 
@@ -157,6 +159,7 @@ export function AppNavigator() {
         <Stack.Screen name="Tracking"         component={TrackingScreen} />
         <Stack.Screen name="Concluido"        component={ConcluidoScreen} />
         <Stack.Screen name="Ranking"           component={RankingScreen} />
+        <Stack.Screen name="PlanosSeguro" component={PlanosSeguroScreen} />
         <Stack.Screen name="TermosUso" component={TermosUsoScreen} />
         <Stack.Screen name="Suporte" component={SuporteScreen} />
         <Stack.Screen name="Privacidade" component={PrivacidadeScreen} />

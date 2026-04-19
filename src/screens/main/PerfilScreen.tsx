@@ -24,6 +24,7 @@ const CONQUISTAS = [
 ];
 
 const MENU_ITEMS = [
+  { icon: '🛡', label: 'Planos Rescue', sub: 'Seguro para resgates', rota: 'PlanosSeguro' },
   { icon: '🚗', label: 'Meus Veículos',       sub: '2 veículos cadastrados', rota: 'MeusVeiculos' },
   { icon: '💳', label: 'Pagamentos', sub: 'Cartão e PIX', rota: 'Pagamentos' },
   { icon: '🔔', label: 'Notificações', sub: 'Alertas ativos', rota: 'Notificacoes' },
