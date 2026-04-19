@@ -24,7 +24,7 @@ const CONQUISTAS = [
 ];
 
 const MENU_ITEMS = [
-  { icon: '🚗', label: 'Meus Veículos',       sub: '2 veículos cadastrados' },
+  { icon: '🚗', label: 'Meus Veículos',       sub: '2 veículos cadastrados', rota: 'MeusVeiculos' },
   { icon: '💳', label: 'Pagamentos',           sub: 'Cartão e PIX' },
   { icon: '🔔', label: 'Notificações',         sub: 'Alertas ativos' },
   { icon: '🛡', label: 'Privacidade',          sub: 'LGPD · seus dados' },
@@ -198,7 +198,7 @@ export default function PerfilScreen() {
           <View style={styles.menuCard}>
             {MENU_ITEMS.map((item, i) => (
               <View key={i}>
-                <TouchableOpacity style={styles.menuItem} activeOpacity={0.7}>
+                <TouchableOpacity style={styles.menuItem} activeOpacity={0.7} onPress={() => (item as any).rota && navigation.navigate((item as any).rota as any)}>
                   <View style={styles.menuIconWrap}>
                     <Text style={styles.menuIcon}>{item.icon}</Text>
                   </View>
