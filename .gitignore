@@ -76,3 +76,5 @@ yarn-error.log
 src/config/keys.ts
 src/config/keys.ts
 src/config/keys.ts
+android/app/src/main/assets/index.android.bundle
+android/app/src/main/res/drawable-*
