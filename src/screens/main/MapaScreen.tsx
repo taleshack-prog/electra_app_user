@@ -1,260 +1,233 @@
 import React, { useRef, useEffect, useState } from 'react';
 import {
-  View, Text, TouchableOpacity, StyleSheet,
-  Animated, StatusBar, Dimensions, ScrollView,
+  View, Text, StyleSheet, Animated, StatusBar,
+  TouchableOpacity, Dimensions, ScrollView,
 } from 'react-native';
 import { WebView } from 'react-native-webview';
+import { useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { RootStackParamList } from '../../navigation';
 
 const { width, height } = Dimensions.get('window');
 
-const FILTROS = ['Todos', 'DC Fast', 'AC', 'Disponível', '24h'];
-
 const ESTACOES = [
-  { id: '1', nome: 'Eletroposto Central', end: 'Av. Paulista, 1000', dist: '1,2km', potencia: '150kW', tipo: 'DC', status: 'livre',   preco: 'R$ 3,20/kWh', rating: 4.8, vagas: 3 },
-  { id: '2', nome: 'BYD Charge Hub',      end: 'R. Augusta, 400',   dist: '2,7km', potencia: '22kW',  tipo: 'AC', status: 'ocupado', preco: 'R$ 2,10/kWh', rating: 4.5, vagas: 0 },
-  { id: '3', nome: 'EV Station Plus',     end: 'Av. Faria Lima, 200',dist: '3,1km', potencia: '50kW',  tipo: 'DC', status: 'livre',   preco: 'R$ 2,80/kWh', rating: 4.9, vagas: 2 },
-  { id: '4', nome: 'GreenCharge 24h',     end: 'R. Oscar Freire, 50',dist: '4,2km', potencia: '75kW',  tipo: 'DC', status: 'livre',   preco: 'R$ 3,00/kWh', rating: 4.7, vagas: 5 },
+  { id:'1', nome:'Eletroposto Central', end:'Av. Paulista, 1000', dist:'1,2km', potencia:'150kW', tipo:'DC', status:'livre',   preco:'R$ 3,20/kWh', rating:4.8, vagas:3,  lat:-23.5614, lng:-46.6560 },
+  { id:'2', nome:'BYD Charge Hub',      end:'R. Augusta, 400',   dist:'2,7km', potencia:'22kW',  tipo:'AC', status:'ocupado', preco:'R$ 2,10/kWh', rating:4.5, vagas:0,  lat:-23.5489, lng:-46.6388 },
+  { id:'3', nome:'EV Station Plus',     end:'Av. Faria Lima, 200',dist:'3,1km', potencia:'50kW',  tipo:'DC', status:'livre',   preco:'R$ 2,80/kWh', rating:4.9, vagas:2,  lat:-23.5700, lng:-46.6470 },
+  { id:'4', nome:'GreenCharge 24h',     end:'R. Oscar Freire, 50',dist:'4,2km', potencia:'75kW',  tipo:'DC', status:'livre',   preco:'R$ 3,00/kWh', rating:4.7, vagas:5,  lat:-23.5580, lng:-46.6650 },
 ];
 
-const MAPA_HTML = `
-<!DOCTYPE html>
+const MAPA_HTML = `<!DOCTYPE html>
 <html>
 <head>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    html, body, #map { width: 100%; height: 100%; background: #0A1628; }
-    .leaflet-tile { filter: brightness(0.8) saturate(0.6) hue-rotate(180deg) invert(1) brightness(0.55); }
-    .leaflet-control-attribution, .leaflet-control-zoom { display: none; }
+    * { margin:0; padding:0; box-sizing:border-box; }
+    html, body, #map { width:100%; height:100%; background:#0A1628; }
+    .leaflet-tile { filter: brightness(0.85) saturate(0.7) hue-rotate(180deg) invert(1) brightness(0.6); }
+    .leaflet-control-attribution { display:none; }
   </style>
 </head>
 <body>
 <div id="map"></div>
 <script>
-  const map = L.map('map', { zoomControl: false, attributionControl: false })
-    .setView([-23.5558, -46.6396], 14);
-  L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
+  const map = L.map('map', { zoomControl:true, attributionControl:false }).setView([-23.5558, -46.6396], 13);
+  L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom:19 }).addTo(map);
 
-  const estacoes = [
-    { lat: -23.5614, lng: -46.6560, nome: 'Eletroposto Central', status: 'livre',   kw: '150kW' },
-    { lat: -23.5489, lng: -46.6388, nome: 'BYD Charge Hub',      status: 'ocupado', kw: '22kW'  },
-    { lat: -23.5700, lng: -46.6470, nome: 'EV Station Plus',     status: 'livre',   kw: '50kW'  },
-    { lat: -23.5420, lng: -46.6520, nome: 'GreenCharge 24h',     status: 'livre',   kw: '75kW'  },
-  ];
+  const estacoes = ${JSON.stringify(ESTACOES)};
 
   estacoes.forEach(e => {
     const cor = e.status === 'livre' ? '#00FF87' : '#FFB800';
     const icon = L.divIcon({
       className: '',
-      html: '<div style="width:36px;height:36px;border-radius:50%;border:2px solid ' + cor + ';background:' + cor + '22;display:flex;align-items:center;justify-content:center;font-size:16px;box-shadow:0 0 12px ' + cor + '44;">⚡</div>',
-      iconSize: [36,36], iconAnchor: [18,18],
+      html: '<div style="width:14px;height:14px;border-radius:50%;border:2px solid ' + cor + ';background:' + cor + '44;box-shadow:0 0 6px ' + cor + '66;"></div>',
+      iconSize: [14,14],
+      iconAnchor: [7,7],
     });
     L.marker([e.lat, e.lng], { icon })
       .addTo(map)
-      .bindPopup('<b>' + e.nome + '</b><br>' + e.kw + ' · ' + e.status);
+      .on('click', function() {
+        window.ReactNativeWebView.postMessage(JSON.stringify({ tipo:'selectEstacao', id: e.id }));
+      });
   });
 
   // Pin usuário
   const userIcon = L.divIcon({
     className: '',
-    html: '<div style="width:16px;height:16px;border-radius:50%;background:#00E5FF;border:3px solid #070B14;box-shadow:0 0 16px #00E5FF88;"></div>',
-    iconSize: [16,16], iconAnchor: [8,8],
+    html: '<div style="width:14px;height:14px;border-radius:50%;background:#00E5FF;border:2px solid #070B14;box-shadow:0 0 10px #00E5FF88;"></div>',
+    iconSize: [14,14],
+    iconAnchor: [7,7],
   });
   L.marker([-23.5558, -46.6396], { icon: userIcon }).addTo(map);
 </script>
 </body>
-</html>
-`;
+</html>`;
 
 export default function MapaScreen() {
-  const fadeAnim = useRef(new Animated.Value(0)).current;
-  const [filtroAtivo, setFiltroAtivo] = useState('Todos');
-  const [estacaoSelecionada, setEstacaoSelecionada] = useState<string | null>(null);
+  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  const [estacaoSelecionada, setEstacaoSelecionada] = useState<string|null>(null);
+  const [filtro, setFiltro] = useState('Todos');
+  const cardAnim = useRef(new Animated.Value(0)).current;
 
-  useEffect(() => {
-    Animated.timing(fadeAnim, { toValue: 1, duration: 500, useNativeDriver: true }).start();
-  }, []);
+  const estacao = ESTACOES.find(e => e.id === estacaoSelecionada);
 
-  const estacoesFiltradas = ESTACOES.filter(e => {
-    if (filtroAtivo === 'Todos') return true;
-    if (filtroAtivo === 'DC Fast') return e.tipo === 'DC';
-    if (filtroAtivo === 'AC') return e.tipo === 'AC';
-    if (filtroAtivo === 'Disponível') return e.status === 'livre';
-    if (filtroAtivo === '24h') return e.nome.includes('24h');
-    return true;
-  });
+  const mostrarCard = (id: string) => {
+    setEstacaoSelecionada(id);
+    Animated.spring(cardAnim, { toValue:1, friction:8, tension:60, useNativeDriver:true }).start();
+  };
 
-  const estacaoDetalhe = ESTACOES.find(e => e.id === estacaoSelecionada);
+  const esconderCard = () => {
+    Animated.timing(cardAnim, { toValue:0, duration:200, useNativeDriver:true }).start(() => {
+      setEstacaoSelecionada(null);
+    });
+  };
+
+  const onMessage = (event: any) => {
+    try {
+      const msg = JSON.parse(event.nativeEvent.data);
+      if (msg.tipo === 'selectEstacao') mostrarCard(msg.id);
+    } catch {}
+  };
+
+  const cardY = cardAnim.interpolate({ inputRange:[0,1], outputRange:[300, 0] });
+
+  const FILTROS = ['Todos','DC Fast','AC','Disponível','24h'];
 
   return (
-    <View style={styles.root}>
+    <View style={s.root}>
       <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
 
-      {/* Mapa full screen */}
+      {/* Mapa fullscreen */}
       <WebView
         source={{ html: MAPA_HTML }}
         style={StyleSheet.absoluteFillObject}
+        scrollEnabled={false}
         javaScriptEnabled
         domStorageEnabled
         mixedContentMode="always"
         originWhitelist={['*']}
-        scrollEnabled={false}
+        onMessage={onMessage}
       />
 
-      {/* Header flutuante */}
-      <Animated.View style={[styles.header, { opacity: fadeAnim }]}>
-        <View style={styles.headerCard}>
-          <Text style={styles.headerTitle}>Estações</Text>
-          <Text style={styles.headerSub}>{estacoesFiltradas.length} encontradas</Text>
+      {/* Header */}
+      <View style={s.header}>
+        <View style={s.headerCard}>
+          <Text style={s.headerTitle}>Estações</Text>
+          <Text style={s.headerSub}>{ESTACOES.length} encontradas · Toque num pin</Text>
         </View>
-        <TouchableOpacity style={styles.filterBtn}>
-          <Text style={styles.filterIcon}>⚙</Text>
+        <TouchableOpacity style={s.settingsBtn}>
+          <Text style={{fontSize:18}}>⚙</Text>
         </TouchableOpacity>
-      </Animated.View>
+      </View>
 
       {/* Filtros */}
-      <Animated.View style={[styles.filtrosWrap, { opacity: fadeAnim }]}>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filtrosScroll}>
+      <View style={s.filtrosWrap}>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.filtrosContent}>
           {FILTROS.map(f => (
-            <TouchableOpacity
-              key={f}
-              style={[styles.filtroChip, filtroAtivo === f && styles.filtroChipActive]}
-              onPress={() => setFiltroAtivo(f)}
-            >
-              <Text style={[styles.filtroText, filtroAtivo === f && styles.filtroTextActive]}>{f}</Text>
+            <TouchableOpacity key={f} onPress={() => setFiltro(f)}
+              style={[s.filtroBtn, filtro===f && s.filtroBtnActive]}>
+              <Text style={[s.filtroText, filtro===f && s.filtroTextActive]}>{f}</Text>
             </TouchableOpacity>
           ))}
         </ScrollView>
-      </Animated.View>
+      </View>
 
-      {/* Lista de estações */}
-      <Animated.View style={[styles.listaWrap, { opacity: fadeAnim }]}>
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.listaScroll}
-          snapToInterval={width * 0.8 + 12}
-          decelerationRate="fast"
-        >
-          {estacoesFiltradas.map(e => (
-            <TouchableOpacity
-              key={e.id}
-              style={[styles.estacaoCard, estacaoSelecionada === e.id && styles.estacaoCardActive]}
-              onPress={() => setEstacaoSelecionada(e.id === estacaoSelecionada ? null : e.id)}
-              activeOpacity={0.85}
-            >
-              {/* Top */}
-              <View style={styles.estacaoTop}>
-                <View style={[styles.statusPill, { backgroundColor: e.status === 'livre' ? 'rgba(0,255,135,0.15)' : 'rgba(255,184,0,0.15)' }]}>
-                  <View style={[styles.statusDot, { backgroundColor: e.status === 'livre' ? '#00FF87' : '#FFB800' }]} />
-                  <Text style={[styles.statusText, { color: e.status === 'livre' ? '#00FF87' : '#FFB800' }]}>
-                    {e.status === 'livre' ? 'Disponível' : 'Ocupado'}
-                  </Text>
-                </View>
-                <Text style={styles.estacaoRating}>⭐ {e.rating}</Text>
-              </View>
-
-              {/* Nome */}
-              <Text style={styles.estacaoNome}>{e.nome}</Text>
-              <Text style={styles.estacaoEnd}>{e.end}</Text>
-
-              {/* Specs */}
-              <View style={styles.specsRow}>
-                <View style={styles.specItem}>
-                  <Text style={styles.specIcon}>⚡</Text>
-                  <Text style={styles.specVal}>{e.potencia}</Text>
-                </View>
-                <View style={styles.specItem}>
-                  <Text style={styles.specIcon}>📍</Text>
-                  <Text style={styles.specVal}>{e.dist}</Text>
-                </View>
-                <View style={styles.specItem}>
-                  <Text style={styles.specIcon}>💰</Text>
-                  <Text style={styles.specVal}>{e.preco}</Text>
-                </View>
-              </View>
-
-              {/* Vagas */}
-              {e.status === 'livre' && (
-                <View style={styles.vagasRow}>
-                  <Text style={styles.vagasText}>🔌 {e.vagas} vagas livres</Text>
-                </View>
-              )}
-
-              {/* CTA */}
-              <View style={styles.estacaoBtns}>
-                <TouchableOpacity style={styles.btnNavegar}>
-                  <Text style={styles.btnNavegarText}>🗺 Navegar</Text>
-                </TouchableOpacity>
-                <TouchableOpacity style={[styles.btnRecarregar, e.status === 'ocupado' && styles.btnDisabled]}>
-                  <Text style={styles.btnRecarregarText}>
-                    {e.status === 'livre' ? '⚡ Recarregar' : 'Indisponível'}
-                  </Text>
-                </TouchableOpacity>
-              </View>
+      {/* Card estação — aparece ao clicar no pin */}
+      {estacaoSelecionada && estacao && (
+        <Animated.View style={[s.cardWrap, { transform:[{translateY: cardY}] }]}>
+          <View style={s.card}>
+            {/* Fechar */}
+            <TouchableOpacity style={s.closeBtn} onPress={esconderCard}>
+              <Text style={s.closeBtnText}>✕</Text>
             </TouchableOpacity>
-          ))}
-        </ScrollView>
-      </Animated.View>
 
-      {/* Botão minha localização */}
-      <Animated.View style={[styles.myLocBtn, { opacity: fadeAnim }]}>
-        <TouchableOpacity style={styles.myLocBtnInner}>
-          <Text style={styles.myLocIcon}>◎</Text>
-        </TouchableOpacity>
-      </Animated.View>
+            {/* Header card */}
+            <View style={s.cardHeader}>
+              <View style={[s.statusBadge, { backgroundColor: estacao.status==='livre'?'rgba(0,255,135,0.15)':'rgba(255,184,0,0.15)' }]}>
+                <View style={[s.statusDot, { backgroundColor: estacao.status==='livre'?'#00FF87':'#FFB800' }]} />
+                <Text style={[s.statusText, { color: estacao.status==='livre'?'#00FF87':'#FFB800' }]}>
+                  {estacao.status==='livre'?'Disponível':'Ocupado'}
+                </Text>
+              </View>
+              <Text style={s.rating}>★ {estacao.rating}</Text>
+            </View>
+
+            <Text style={s.cardNome}>{estacao.nome}</Text>
+            <Text style={s.cardEnd}>{estacao.end}</Text>
+
+            {/* Info */}
+            <View style={s.infoRow}>
+              <Text style={s.infoItem}>⚡ {estacao.potencia}</Text>
+              <Text style={s.infoItem}>📍 {estacao.dist}</Text>
+              <Text style={s.infoItem}>💰 {estacao.preco}</Text>
+            </View>
+
+            {estacao.vagas > 0 && (
+              <Text style={s.vagasText}>🔌 {estacao.vagas} vagas livres</Text>
+            )}
+
+            {/* Botões */}
+            <View style={s.cardBtns}>
+              <TouchableOpacity style={s.btnNavegar} onPress={esconderCard}>
+                <Text style={s.btnNavegarText}>🗺 Navegar</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[s.btnRecarregar, estacao.status==='ocupado' && s.btnDisabled]}
+                onPress={() => estacao.status==='livre' && navigation.navigate('Recarga' as any)}>
+                <Text style={s.btnRecarregarText}>
+                  {estacao.status==='livre' ? '⚡ Recarregar' : 'Indisponível'}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </Animated.View>
+      )}
     </View>
   );
 }
 
-const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: '#0A1628' },
+const s = StyleSheet.create({
+  root:   { flex:1, backgroundColor:'#0A1628' },
 
-  header:     { position: 'absolute', top: 48, left: 16, right: 16, flexDirection: 'row', alignItems: 'center', gap: 10 },
-  headerCard: { flex: 1, backgroundColor: 'rgba(13,19,32,0.92)', borderRadius: 14, paddingHorizontal: 14, paddingVertical: 10, borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)' },
-  headerTitle:{ fontFamily: 'Syne-Bold', fontSize: 17, color: '#F0F4FF' },
-  headerSub:  { fontFamily: 'DMSans-Regular', fontSize: 12, color: 'rgba(240,244,255,0.4)', marginTop: 1 },
-  filterBtn:  { width: 44, height: 44, borderRadius: 22, backgroundColor: 'rgba(13,19,32,0.92)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)', alignItems: 'center', justifyContent: 'center' },
-  filterIcon: { fontSize: 18 },
+  header:     { position:'absolute', top:48, left:16, right:16, flexDirection:'row', alignItems:'center', gap:10 },
+  headerCard: { flex:1, backgroundColor:'rgba(13,19,32,0.92)', borderRadius:14, paddingHorizontal:14, paddingVertical:10, borderWidth:1, borderColor:'rgba(255,255,255,0.08)' },
+  headerTitle:{ fontFamily:'Syne-Bold', fontSize:16, color:'#F0F4FF' },
+  headerSub:  { fontFamily:'DMSans-Regular', fontSize:11, color:'rgba(240,244,255,0.4)', marginTop:2 },
+  settingsBtn:{ width:44, height:44, borderRadius:22, backgroundColor:'rgba(13,19,32,0.92)', borderWidth:1, borderColor:'rgba(255,255,255,0.08)', alignItems:'center', justifyContent:'center' },
 
-  filtrosWrap:   { position: 'absolute', top: 118, left: 0, right: 0 },
-  filtrosScroll: { paddingHorizontal: 16, gap: 8 },
-  filtroChip:    { paddingHorizontal: 14, paddingVertical: 7, backgroundColor: 'rgba(13,19,32,0.9)', borderRadius: 20, borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)' },
-  filtroChipActive: { backgroundColor: 'rgba(0,229,255,0.15)', borderColor: '#00E5FF' },
-  filtroText:    { fontFamily: 'DMSans-Regular', fontSize: 13, color: 'rgba(240,244,255,0.5)' },
-  filtroTextActive: { color: '#00E5FF', fontWeight: '600' },
+  filtrosWrap:    { position:'absolute', top:118, left:0, right:0 },
+  filtrosContent: { paddingHorizontal:16, gap:8 },
+  filtroBtn:      { paddingHorizontal:14, paddingVertical:7, borderRadius:20, backgroundColor:'rgba(13,19,32,0.85)', borderWidth:1, borderColor:'rgba(255,255,255,0.1)' },
+  filtroBtnActive:{ backgroundColor:'rgba(0,229,255,0.2)', borderColor:'rgba(0,229,255,0.4)' },
+  filtroText:     { fontFamily:'DMSans-Regular', fontSize:12, color:'rgba(240,244,255,0.6)' },
+  filtroTextActive:{ fontFamily:'Syne-Bold', color:'#00E5FF' },
 
-  listaWrap:   { position: 'absolute', bottom: 90, left: 0, right: 0 },
-  listaScroll: { paddingHorizontal: 16, gap: 12 },
+  cardWrap: { position:'absolute', bottom:90, left:16, right:16 },
+  card:     { backgroundColor:'rgba(13,19,32,0.97)', borderRadius:20, padding:16, borderWidth:1, borderColor:'rgba(255,255,255,0.1)' },
 
-  estacaoCard:       { width: width * 0.8, backgroundColor: 'rgba(13,19,32,0.96)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)', borderRadius: 20, padding: 16 },
-  estacaoCardActive: { borderColor: 'rgba(0,229,255,0.3)' },
-  estacaoTop:        { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 },
-  statusPill:        { flexDirection: 'row', alignItems: 'center', gap: 5, paddingHorizontal: 10, paddingVertical: 4, borderRadius: 20 },
-  statusDot:         { width: 6, height: 6, borderRadius: 3 },
-  statusText:        { fontFamily: 'JetBrainsMono-Regular', fontSize: 11, fontWeight: '600' },
-  estacaoRating:     { fontFamily: 'DMSans-Regular', fontSize: 13, color: '#FFB800' },
-  estacaoNome:       { fontFamily: 'Syne-Bold', fontSize: 15, color: '#F0F4FF', marginBottom: 3 },
-  estacaoEnd:        { fontFamily: 'DMSans-Regular', fontSize: 12, color: 'rgba(240,244,255,0.4)', marginBottom: 12 },
+  closeBtn:     { position:'absolute', top:12, right:12, width:28, height:28, borderRadius:14, backgroundColor:'rgba(255,255,255,0.08)', alignItems:'center', justifyContent:'center', zIndex:10 },
+  closeBtnText: { fontSize:12, color:'rgba(240,244,255,0.5)' },
 
-  specsRow:  { flexDirection: 'row', gap: 12, marginBottom: 8 },
-  specItem:  { flexDirection: 'row', alignItems: 'center', gap: 4 },
-  specIcon:  { fontSize: 12 },
-  specVal:   { fontFamily: 'JetBrainsMono-Regular', fontSize: 11, color: 'rgba(240,244,255,0.6)' },
+  cardHeader:  { flexDirection:'row', alignItems:'center', justifyContent:'space-between', marginBottom:8 },
+  statusBadge: { flexDirection:'row', alignItems:'center', gap:6, paddingHorizontal:10, paddingVertical:4, borderRadius:20 },
+  statusDot:   { width:6, height:6, borderRadius:3 },
+  statusText:  { fontFamily:'Syne-Bold', fontSize:11 },
+  rating:      { fontFamily:'Syne-Bold', fontSize:13, color:'#FFB800' },
 
-  vagasRow:  { marginBottom: 10 },
-  vagasText: { fontFamily: 'DMSans-Regular', fontSize: 12, color: '#00FF87' },
+  cardNome: { fontFamily:'Syne-Bold', fontSize:17, color:'#F0F4FF', marginBottom:2 },
+  cardEnd:  { fontFamily:'DMSans-Regular', fontSize:12, color:'rgba(240,244,255,0.4)', marginBottom:10 },
 
-  estacaoBtns:      { flexDirection: 'row', gap: 8, marginTop: 4 },
-  btnNavegar:        { flex: 1, height: 38, backgroundColor: '#1A2236', borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)', borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
-  btnNavegarText:    { fontFamily: 'DMSans-Regular', fontSize: 13, color: 'rgba(240,244,255,0.7)' },
-  btnRecarregar:     { flex: 1, height: 38, backgroundColor: '#00E5FF', borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
-  btnRecarregarText: { fontFamily: 'Syne-Bold', fontSize: 13, color: '#000' },
-  btnDisabled:       { backgroundColor: '#1A2236', borderWidth: 1, borderColor: 'rgba(255,255,255,0.06)' },
+  infoRow:  { flexDirection:'row', gap:12, marginBottom:8 },
+  infoItem: { fontFamily:'DMSans-Regular', fontSize:12, color:'rgba(240,244,255,0.6)' },
 
-  myLocBtn:      { position: 'absolute', right: 16, bottom: 220 },
-  myLocBtnInner: { width: 44, height: 44, borderRadius: 22, backgroundColor: 'rgba(13,19,32,0.92)', borderWidth: 1, borderColor: 'rgba(0,229,255,0.3)', alignItems: 'center', justifyContent: 'center' },
-  myLocIcon:     { fontSize: 20, color: '#00E5FF' },
+  vagasText: { fontFamily:'Syne-Bold', fontSize:13, color:'#00FF87', marginBottom:12 },
+
+  cardBtns:       { flexDirection:'row', gap:10 },
+  btnNavegar:     { flex:1, height:42, backgroundColor:'rgba(255,255,255,0.06)', borderRadius:12, alignItems:'center', justifyContent:'center', borderWidth:1, borderColor:'rgba(255,255,255,0.1)' },
+  btnNavegarText: { fontFamily:'Syne-Bold', fontSize:13, color:'#F0F4FF' },
+  btnRecarregar:     { flex:1, height:42, backgroundColor:'#00E5FF', borderRadius:12, alignItems:'center', justifyContent:'center' },
+  btnRecarregarText: { fontFamily:'Syne-Bold', fontSize:13, color:'#000' },
+  btnDisabled:       { backgroundColor:'rgba(255,255,255,0.06)' },
 });

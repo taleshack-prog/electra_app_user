@@ -23,7 +23,7 @@ const MAPA_HTML = `
     * { margin: 0; padding: 0; box-sizing: border-box; }
     html, body, #map { width: 100%; height: 100%; background: #0A1628; }
     .leaflet-tile { filter: brightness(0.85) saturate(0.7) hue-rotate(180deg) invert(1) brightness(0.6); }
-    .custom-pin { width: 28px; height: 28px; border-radius: 50%; border: 2px solid; display: flex; align-items: center; justify-content: center; font-size: 12px; }
+    .custom-pin { width: 16px; height: 16px; border-radius: 50%; border: 1.5px solid; display: flex; align-items: center; justify-content: center; font-size: 8px; }
     .leaflet-control-attribution { display: none; }
   </style>
 </head>
@@ -47,13 +47,13 @@ const MAPA_HTML = `
     const cor = e.status === 'livre' ? '#00FF87' : '#FFB800';
     const icon = L.divIcon({
       className: '',
-      html: '<div style="width:28px;height:28px;border-radius:50%;border:2px solid ' + cor + ';background:' + cor + '22;display:flex;align-items:center;justify-content:center;font-size:13px;">⚡</div>',
-      iconSize: [28, 28],
-      iconAnchor: [14, 14],
+      html: '<div style="width:12px;height:12px;border-radius:50%;border:1.5px solid ' + cor + ';background:' + cor + '44;"></div>',
+      iconSize: [16, 16],
+      iconAnchor: [8, 8],
     });
     L.marker([e.lat, e.lng], { icon })
       .addTo(map)
-      .bindPopup('<b>' + e.nome + '</b><br>' + e.kw + ' · ' + e.status);
+      
   });
 
   // Pin do usuário
