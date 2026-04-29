@@ -4,6 +4,7 @@ import {
   Animated, StatusBar, Dimensions, Easing,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
+import { useSOS } from '../../hooks/useSOS';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../navigation';
 

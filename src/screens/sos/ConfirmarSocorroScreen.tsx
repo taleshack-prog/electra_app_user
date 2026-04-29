@@ -4,6 +4,7 @@ import {
   Animated, StatusBar, ScrollView, Dimensions,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
+import { useSOS } from '../../hooks/useSOS';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../navigation';
 
@@ -27,6 +28,7 @@ export default function ConfirmarSocorroScreen() {
   const [problemaSelecionado, setProblemaSelecionado] = useState('1');
   const [localizacao] = useState('Av. Paulista, 1000 — Bela Vista, São Paulo');
   const [confirmando, setConfirmando] = useState(false);
+  const { criarSOS } = useSOS();
 
   useEffect(() => {
     Animated.parallel([
@@ -35,13 +37,20 @@ export default function ConfirmarSocorroScreen() {
     ]).start();
   }, []);
 
-  const handleConfirmar = () => {
+  const handleConfirmar = async () => {
     if (confirmando) return;
     setConfirmando(true);
-    setTimeout(() => {
-      setConfirmando(false);
-      navigation.navigate('Tracking');
-    }, 1500);
+    const resultado = await criarSOS({
+      latitude: -23.5614,
+      longitude: -46.6558,
+      endereco: 'Av. Paulista, 1000, São Paulo',
+      veiculo: 'BYD Seal 03',
+      bateria_nivel: 8,
+    });
+    setConfirmando(false);
+    if (resultado) {
+      navigation.navigate('Tracking' as any, { sosId: resultado.id });
+    }
   };
 
   return (
