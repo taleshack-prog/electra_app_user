@@ -1,20 +1,18 @@
-import React, { useRef, useEffect, useState } from 'react';
+import React, { useRef, useState } from 'react';
 import {
-  View, Text, StyleSheet, Animated, StatusBar,
-  TouchableOpacity, Dimensions, ScrollView,
+  View, Text, StyleSheet, Animated,
+  StatusBar, TouchableOpacity, ScrollView,
 } from 'react-native';
 import { WebView } from 'react-native-webview';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../navigation';
 
-const { width, height } = Dimensions.get('window');
-
 const ESTACOES = [
-  { id:'1', nome:'Eletroposto Central', end:'Av. Paulista, 1000', dist:'1,2km', potencia:'150kW', tipo:'DC', status:'livre',   preco:'R$ 3,20/kWh', rating:4.8, vagas:3,  lat:-23.5614, lng:-46.6560 },
-  { id:'2', nome:'BYD Charge Hub',      end:'R. Augusta, 400',   dist:'2,7km', potencia:'22kW',  tipo:'AC', status:'ocupado', preco:'R$ 2,10/kWh', rating:4.5, vagas:0,  lat:-23.5489, lng:-46.6388 },
-  { id:'3', nome:'EV Station Plus',     end:'Av. Faria Lima, 200',dist:'3,1km', potencia:'50kW',  tipo:'DC', status:'livre',   preco:'R$ 2,80/kWh', rating:4.9, vagas:2,  lat:-23.5700, lng:-46.6470 },
-  { id:'4', nome:'GreenCharge 24h',     end:'R. Oscar Freire, 50',dist:'4,2km', potencia:'75kW',  tipo:'DC', status:'livre',   preco:'R$ 3,00/kWh', rating:4.7, vagas:5,  lat:-23.5580, lng:-46.6650 },
+  { id:'1', nome:'Eletroposto Central', end:'Av. Paulista, 1000',  dist:'1,2km', potencia:'150kW', tipo:'DC', status:'livre',   preco:'R$ 3,20/kWh', rating:4.8, vagas:3, lat:-23.5614, lng:-46.6560 },
+  { id:'2', nome:'BYD Charge Hub',      end:'R. Augusta, 400',    dist:'2,7km', potencia:'22kW',  tipo:'AC', status:'ocupado', preco:'R$ 2,10/kWh', rating:4.5, vagas:0, lat:-23.5489, lng:-46.6388 },
+  { id:'3', nome:'EV Station Plus',     end:'Av. Faria Lima, 200', dist:'3,1km', potencia:'50kW',  tipo:'DC', status:'livre',   preco:'R$ 2,80/kWh', rating:4.9, vagas:2, lat:-23.5700, lng:-46.6470 },
+  { id:'4', nome:'GreenCharge 24h',     end:'R. Oscar Freire, 50', dist:'4,2km', potencia:'75kW',  tipo:'DC', status:'livre',   preco:'R$ 3,00/kWh', rating:4.7, vagas:5, lat:-23.5580, lng:-46.6650 },
 ];
 
 const MAPA_HTML = `<!DOCTYPE html>
@@ -35,30 +33,23 @@ const MAPA_HTML = `<!DOCTYPE html>
 <script>
   const map = L.map('map', { zoomControl:true, attributionControl:false }).setView([-23.5558, -46.6396], 13);
   L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom:19 }).addTo(map);
-
   const estacoes = ${JSON.stringify(ESTACOES)};
-
   estacoes.forEach(e => {
     const cor = e.status === 'livre' ? '#00FF87' : '#FFB800';
     const icon = L.divIcon({
       className: '',
       html: '<div style="width:14px;height:14px;border-radius:50%;border:2px solid ' + cor + ';background:' + cor + '44;box-shadow:0 0 6px ' + cor + '66;"></div>',
-      iconSize: [14,14],
-      iconAnchor: [7,7],
+      iconSize: [14,14], iconAnchor: [7,7],
     });
-    L.marker([e.lat, e.lng], { icon })
-      .addTo(map)
+    L.marker([e.lat, e.lng], { icon }).addTo(map)
       .on('click', function() {
         window.ReactNativeWebView.postMessage(JSON.stringify({ tipo:'selectEstacao', id: e.id }));
       });
   });
-
-  // Pin usuário
   const userIcon = L.divIcon({
     className: '',
     html: '<div style="width:14px;height:14px;border-radius:50%;background:#00E5FF;border:2px solid #070B14;box-shadow:0 0 10px #00E5FF88;"></div>',
-    iconSize: [14,14],
-    iconAnchor: [7,7],
+    iconSize: [14,14], iconAnchor: [7,7],
   });
   L.marker([-23.5558, -46.6396], { icon: userIcon }).addTo(map);
 </script>
@@ -92,14 +83,12 @@ export default function MapaScreen() {
   };
 
   const cardY = cardAnim.interpolate({ inputRange:[0,1], outputRange:[300, 0] });
-
   const FILTROS = ['Todos','DC Fast','AC','Disponível','24h'];
 
   return (
     <View style={s.root}>
       <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
 
-      {/* Mapa fullscreen */}
       <WebView
         source={{ html: MAPA_HTML }}
         style={StyleSheet.absoluteFillObject}
@@ -111,7 +100,6 @@ export default function MapaScreen() {
         onMessage={onMessage}
       />
 
-      {/* Header */}
       <View style={s.header}>
         <View style={s.headerCard}>
           <Text style={s.headerTitle}>Estações</Text>
@@ -122,7 +110,6 @@ export default function MapaScreen() {
         </TouchableOpacity>
       </View>
 
-      {/* Filtros */}
       <View style={s.filtrosWrap}>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.filtrosContent}>
           {FILTROS.map(f => (
@@ -134,16 +121,13 @@ export default function MapaScreen() {
         </ScrollView>
       </View>
 
-      {/* Card estação — aparece ao clicar no pin */}
       {estacaoSelecionada && estacao && (
         <Animated.View style={[s.cardWrap, { transform:[{translateY: cardY}] }]}>
           <View style={s.card}>
-            {/* Fechar */}
             <TouchableOpacity style={s.closeBtn} onPress={esconderCard}>
               <Text style={s.closeBtnText}>✕</Text>
             </TouchableOpacity>
 
-            {/* Header card */}
             <View style={s.cardHeader}>
               <View style={[s.statusBadge, { backgroundColor: estacao.status==='livre'?'rgba(0,255,135,0.15)':'rgba(255,184,0,0.15)' }]}>
                 <View style={[s.statusDot, { backgroundColor: estacao.status==='livre'?'#00FF87':'#FFB800' }]} />
@@ -157,7 +141,6 @@ export default function MapaScreen() {
             <Text style={s.cardNome}>{estacao.nome}</Text>
             <Text style={s.cardEnd}>{estacao.end}</Text>
 
-            {/* Info */}
             <View style={s.infoRow}>
               <Text style={s.infoItem}>⚡ {estacao.potencia}</Text>
               <Text style={s.infoItem}>📍 {estacao.dist}</Text>
@@ -168,16 +151,19 @@ export default function MapaScreen() {
               <Text style={s.vagasText}>🔌 {estacao.vagas} vagas livres</Text>
             )}
 
-            {/* Botões */}
             <View style={s.cardBtns}>
               <TouchableOpacity style={s.btnNavegar} onPress={esconderCard}>
                 <Text style={s.btnNavegarText}>🗺 Navegar</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={[s.btnRecarregar, estacao.status==='ocupado' && s.btnDisabled]}
-                onPress={() => estacao.status==='livre' && navigation.navigate('Recarga' as any)}>
+                onPress={() => {
+                  if (estacao.status !== 'livre') return;
+                  esconderCard();
+                  navigation.navigate('StationDetail', { estacao });
+                }}>
                 <Text style={s.btnRecarregarText}>
-                  {estacao.status==='livre' ? '⚡ Recarregar' : 'Indisponível'}
+                  {estacao.status==='livre' ? '⚡ Ver Detalhes' : 'Indisponível'}
                 </Text>
               </TouchableOpacity>
             </View>
@@ -190,40 +176,31 @@ export default function MapaScreen() {
 
 const s = StyleSheet.create({
   root:   { flex:1, backgroundColor:'#0A1628' },
-
   header:     { position:'absolute', top:48, left:16, right:16, flexDirection:'row', alignItems:'center', gap:10 },
   headerCard: { flex:1, backgroundColor:'rgba(13,19,32,0.92)', borderRadius:14, paddingHorizontal:14, paddingVertical:10, borderWidth:1, borderColor:'rgba(255,255,255,0.08)' },
   headerTitle:{ fontFamily:'Syne-Bold', fontSize:16, color:'#F0F4FF' },
   headerSub:  { fontFamily:'DMSans-Regular', fontSize:11, color:'rgba(240,244,255,0.4)', marginTop:2 },
   settingsBtn:{ width:44, height:44, borderRadius:22, backgroundColor:'rgba(13,19,32,0.92)', borderWidth:1, borderColor:'rgba(255,255,255,0.08)', alignItems:'center', justifyContent:'center' },
-
   filtrosWrap:    { position:'absolute', top:118, left:0, right:0 },
   filtrosContent: { paddingHorizontal:16, gap:8 },
   filtroBtn:      { paddingHorizontal:14, paddingVertical:7, borderRadius:20, backgroundColor:'rgba(13,19,32,0.85)', borderWidth:1, borderColor:'rgba(255,255,255,0.1)' },
   filtroBtnActive:{ backgroundColor:'rgba(0,229,255,0.2)', borderColor:'rgba(0,229,255,0.4)' },
   filtroText:     { fontFamily:'DMSans-Regular', fontSize:12, color:'rgba(240,244,255,0.6)' },
   filtroTextActive:{ fontFamily:'Syne-Bold', color:'#00E5FF' },
-
   cardWrap: { position:'absolute', bottom:90, left:16, right:16 },
   card:     { backgroundColor:'rgba(13,19,32,0.97)', borderRadius:20, padding:16, borderWidth:1, borderColor:'rgba(255,255,255,0.1)' },
-
   closeBtn:     { position:'absolute', top:12, right:12, width:28, height:28, borderRadius:14, backgroundColor:'rgba(255,255,255,0.08)', alignItems:'center', justifyContent:'center', zIndex:10 },
   closeBtnText: { fontSize:12, color:'rgba(240,244,255,0.5)' },
-
   cardHeader:  { flexDirection:'row', alignItems:'center', justifyContent:'space-between', marginBottom:8 },
   statusBadge: { flexDirection:'row', alignItems:'center', gap:6, paddingHorizontal:10, paddingVertical:4, borderRadius:20 },
   statusDot:   { width:6, height:6, borderRadius:3 },
   statusText:  { fontFamily:'Syne-Bold', fontSize:11 },
   rating:      { fontFamily:'Syne-Bold', fontSize:13, color:'#FFB800' },
-
   cardNome: { fontFamily:'Syne-Bold', fontSize:17, color:'#F0F4FF', marginBottom:2 },
   cardEnd:  { fontFamily:'DMSans-Regular', fontSize:12, color:'rgba(240,244,255,0.4)', marginBottom:10 },
-
   infoRow:  { flexDirection:'row', gap:12, marginBottom:8 },
   infoItem: { fontFamily:'DMSans-Regular', fontSize:12, color:'rgba(240,244,255,0.6)' },
-
   vagasText: { fontFamily:'Syne-Bold', fontSize:13, color:'#00FF87', marginBottom:12 },
-
   cardBtns:       { flexDirection:'row', gap:10 },
   btnNavegar:     { flex:1, height:42, backgroundColor:'rgba(255,255,255,0.06)', borderRadius:12, alignItems:'center', justifyContent:'center', borderWidth:1, borderColor:'rgba(255,255,255,0.1)' },
   btnNavegarText: { fontFamily:'Syne-Bold', fontSize:13, color:'#F0F4FF' },
