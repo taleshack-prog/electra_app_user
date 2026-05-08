@@ -5,28 +5,23 @@ import {
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../navigation';
+import { supabase } from '../../lib/supabase';
 
 const { width, height } = Dimensions.get('window');
-
-// Simula verificação de sessão
-// Depois conecta ao Supabase: supabase.auth.getSession()
-const checkSession = async (): Promise<boolean> => {
-  return true; // true = já cadastrado → vai direto para Home
-};
 
 export default function SplashScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
 
-  const logoScale   = useRef(new Animated.Value(0.7)).current;
-  const logoOpacity = useRef(new Animated.Value(0)).current;
-  const textOpacity = useRef(new Animated.Value(0)).current;
-  const tagOpacity  = useRef(new Animated.Value(0)).current;
-  const barWidth    = useRef(new Animated.Value(0)).current;
-  const barOpacity  = useRef(new Animated.Value(0)).current;
-  const ring1Opacity= useRef(new Animated.Value(0)).current;
-  const ring1Scale  = useRef(new Animated.Value(0.6)).current;
-  const ring2Opacity= useRef(new Animated.Value(0)).current;
-  const ring2Scale  = useRef(new Animated.Value(0.6)).current;
+  const logoScale    = useRef(new Animated.Value(0.7)).current;
+  const logoOpacity  = useRef(new Animated.Value(0)).current;
+  const textOpacity  = useRef(new Animated.Value(0)).current;
+  const tagOpacity   = useRef(new Animated.Value(0)).current;
+  const barWidth     = useRef(new Animated.Value(0)).current;
+  const barOpacity   = useRef(new Animated.Value(0)).current;
+  const ring1Opacity = useRef(new Animated.Value(0)).current;
+  const ring1Scale   = useRef(new Animated.Value(0.6)).current;
+  const ring2Opacity = useRef(new Animated.Value(0)).current;
+  const ring2Scale   = useRef(new Animated.Value(0.6)).current;
 
   useEffect(() => {
     StatusBar.setBarStyle('light-content');
@@ -50,15 +45,18 @@ export default function SplashScreen() {
         Animated.timing(barWidth,   { toValue: 180, duration: 1200, useNativeDriver: false }),
       ]),
     ]).start(async () => {
-      // Verifica se usuário já tem sessão
-      const hasSession = await checkSession();
-      setTimeout(() => {
-        if (hasSession) {
-          navigation.replace('MainTabs'); // Já cadastrado → Home
-        } else {
-          navigation.replace('Onboarding1'); // Novo usuário → Onboarding
-        }
-      }, 300);
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        setTimeout(() => {
+          if (session) {
+            navigation.replace('MainTabs');
+          } else {
+            navigation.replace('Onboarding1');
+          }
+        }, 300);
+      } catch {
+        setTimeout(() => navigation.replace('Onboarding1'), 300);
+      }
     });
   }, []);
 
@@ -77,7 +75,7 @@ export default function SplashScreen() {
         </View>
       </Animated.View>
       <Animated.Text style={[styles.wordmark, { opacity: textOpacity }]}>ELECTRA</Animated.Text>
-      <Animated.Text style={[styles.tag, { opacity: tagOpacity }]}>RESCUE</Animated.Text>
+      <Animated.Text style={[styles.tag, { opacity: tagOpacity }]}>CHARGE</Animated.Text>
       <Animated.View style={[styles.barContainer, { opacity: barOpacity }]}>
         <View style={styles.barTrack}>
           <Animated.View style={[styles.barFill, { width: barWidth }]} />
