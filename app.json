@@ -1,4 +1,9 @@
 {
   "name": "electra_app_user",
-  "displayName": "electra_app_user"
+  "displayName": "electra_app_user",
+  "extra": {
+    "eas": {
+      "projectId": "2384f59d-0c72-4ee9-99ae-9d6a7ed79574"
+    }
+  }
 }
