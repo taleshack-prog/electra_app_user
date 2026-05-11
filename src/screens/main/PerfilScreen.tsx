@@ -1,4 +1,5 @@
 import React, { useRef, useEffect, useState } from 'react';
+import { useProfile } from '../../hooks/useProfile';
 import {
   View, Text, TouchableOpacity, StyleSheet,
   Animated, StatusBar, ScrollView, Dimensions,
@@ -34,6 +35,8 @@ const MENU_ITEMS = [
 ];
 
 export default function PerfilScreen() {
+  const { profile, loading } = useProfile();
+  const initials = profile?.nome?.split(' ').map(n => n[0]).join('').slice(0,2).toUpperCase() || '??';
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
 
   const fadeAnim  = useRef(new Animated.Value(0)).current;
@@ -66,15 +69,15 @@ export default function PerfilScreen() {
           <View style={styles.userTop}>
             <View style={styles.avatarWrap}>
               <View style={styles.avatar}>
-                <Text style={styles.avatarText}>JC</Text>
+                <Text style={styles.avatarText}>{initials}</Text>
               </View>
               <TouchableOpacity style={styles.avatarEdit}>
                 <Text style={styles.avatarEditIcon}>✏</Text>
               </TouchableOpacity>
             </View>
             <View style={styles.userInfo}>
-              <Text style={styles.userName}>João Costa</Text>
-              <Text style={styles.userEmail}>joao@email.com</Text>
+              <Text style={styles.userName}>{loading ? 'Carregando...' : (profile?.nome || 'Usuário')}</Text>
+              <Text style={styles.userEmail}>{profile?.email || ''}</Text>
               <View style={styles.nivelRow}>
                 <View style={styles.nivelBadge}>
                   <Text style={styles.nivelText}>⚡ Nível Ouro</Text>
