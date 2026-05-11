@@ -1,9 +1,10 @@
 import React, { useRef, useEffect, useState } from 'react';
 import {
   View, Text, TouchableOpacity, StyleSheet,
-  Animated, StatusBar, ScrollView, Alert,
+  Animated, StatusBar, ScrollView, Alert, TextInput,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
+import { useVeiculos } from '../../hooks/useVeiculos';
 
 const MARCAS = [
   'BYD Seal 03','BYD Atto 03','BYD Dolphin','BYD Han',
@@ -13,22 +14,15 @@ const MARCAS = [
   'Hyundai IONIQ 5','Kia EV6','Outro',
 ];
 
-interface Veiculo {
-  id: string; modelo: string; placa: string;
-  apelido: string; bateria: number; principal: boolean;
-}
-
 export default function MeusVeiculosScreen() {
   const navigation = useNavigation<any>();
   const fadeAnim  = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(20)).current;
-
-  const [veiculos, setVeiculos] = useState<Veiculo[]>([
-    { id:'1', modelo:'BYD Seal 03', placa:'ABC-1234', apelido:'Meu BYD',  bateria:42, principal:true  },
-    { id:'2', modelo:'BYD Dolphin', placa:'XYZ-5678', apelido:'Dolphin',  bateria:78, principal:false },
-  ]);
+  const { veiculos, loading, adicionar, remover, definirPrincipal } = useVeiculos();
   const [adicionando, setAdicionando] = useState(false);
   const [modeloSel, setModeloSel]     = useState('');
+  const [placa, setPlaca]             = useState('');
+  const [apelido, setApelido]         = useState('');
   const [showDropdown, setShowDropdown] = useState(false);
 
   useEffect(() => {
@@ -38,158 +32,160 @@ export default function MeusVeiculosScreen() {
     ]).start();
   }, []);
 
-  const remover = (id: string) => {
+  const handleRemover = (id: string) => {
     Alert.alert('Remover veículo','Tem certeza?',[
       { text:'Cancelar', style:'cancel' },
-      { text:'Remover', style:'destructive', onPress:() => setVeiculos(v => v.filter(x => x.id !== id)) },
+      { text:'Remover', style:'destructive', onPress:() => remover(id) },
     ]);
   };
 
-  const definirPrincipal = (id: string) =>
-    setVeiculos(v => v.map(x => ({ ...x, principal: x.id === id })));
-
-  const adicionar = () => {
-    if (!modeloSel) return;
-    setVeiculos(v => [...v, { id:Date.now().toString(), modelo:modeloSel, placa:'', apelido:modeloSel, bateria:0, principal:false }]);
-    setModeloSel(''); setAdicionando(false);
+  const handleAdicionar = async () => {
+    if (!modeloSel) { Alert.alert('Selecione um modelo'); return; }
+    await adicionar(modeloSel, placa, apelido || modeloSel);
+    setModeloSel(''); setPlaca(''); setApelido(''); setAdicionando(false);
   };
 
   const bc = (b:number) => b<=20?'#FF3B5C':b<=40?'#FFB800':'#00E5FF';
 
   return (
     <View style={s.root}>
-      <StatusBar barStyle="light-content" backgroundColor="#070B14" />
+      <StatusBar barStyle="light-content" backgroundColor="#070B14"/>
+      <Animated.View style={[s.header, { opacity:fadeAnim, transform:[{translateY:slideAnim}] }]}>
+        <TouchableOpacity style={s.backBtn} onPress={() => navigation.goBack()}>
+          <Text style={s.backIcon}>←</Text>
+        </TouchableOpacity>
+        <Text style={s.headerTitle}>Meus Veículos</Text>
+        <TouchableOpacity style={s.addBtn} onPress={() => setAdicionando(true)}>
+          <Text style={s.addIcon}>＋</Text>
+        </TouchableOpacity>
+      </Animated.View>
+
       <ScrollView contentContainerStyle={s.scroll} showsVerticalScrollIndicator={false}>
-
-        <Animated.View style={[s.header, { opacity:fadeAnim, transform:[{translateY:slideAnim}] }]}>
-          <TouchableOpacity style={s.backBtn} onPress={() => navigation.goBack()}>
-            <Text style={s.backArrow}>←</Text>
-          </TouchableOpacity>
-          <Text style={s.headerTitle}>Meus Veículos</Text>
-          <TouchableOpacity style={s.addBtn} onPress={() => setAdicionando(true)}>
-            <Text style={s.addBtnText}>+</Text>
-          </TouchableOpacity>
-        </Animated.View>
-
-        <Animated.View style={{ opacity:fadeAnim }}>
-          {veiculos.map(v => (
-            <View key={v.id} style={[s.card, v.principal && s.cardPrincipal]}>
-              {v.principal && <View style={s.badge}><Text style={s.badgeText}>⭐ Principal</Text></View>}
-              <View style={s.cardTop}>
-                <View style={s.iconWrap}><Text style={{fontSize:24}}>🚗</Text></View>
-                <View style={{flex:1}}>
-                  <Text style={s.apelido}>{v.apelido}</Text>
-                  <Text style={s.modelo}>{v.modelo}</Text>
-                  <Text style={s.placa}>{v.placa}</Text>
-                </View>
-              </View>
-              <View style={s.batRow}>
-                <Text style={s.batLabel}>Bateria</Text>
-                <View style={s.batTrack}>
-                  <View style={[s.batFill, { width:`${v.bateria}%` as any, backgroundColor:bc(v.bateria) }]} />
-                </View>
-                <Text style={[s.batPct, { color:bc(v.bateria) }]}>{v.bateria}%</Text>
-              </View>
-              <View style={s.acoes}>
-                {!v.principal && (
-                  <TouchableOpacity style={s.btnPrincipal} onPress={() => definirPrincipal(v.id)}>
-                    <Text style={s.btnPrincipalText}>Definir como principal</Text>
-                  </TouchableOpacity>
-                )}
-                <TouchableOpacity style={s.btnRemover} onPress={() => remover(v.id)}>
-                  <Text style={s.btnRemoverText}>Remover</Text>
-                </TouchableOpacity>
-              </View>
+        {loading ? (
+          <Text style={s.loadingText}>Carregando veículos...</Text>
+        ) : veiculos.length === 0 ? (
+          <View style={s.emptyWrap}>
+            <Text style={s.emptyIcon}>🚗</Text>
+            <Text style={s.emptyText}>Nenhum veículo cadastrado</Text>
+            <TouchableOpacity style={s.emptyBtn} onPress={() => setAdicionando(true)}>
+              <Text style={s.emptyBtnText}>Adicionar veículo</Text>
+            </TouchableOpacity>
+          </View>
+        ) : veiculos.map(v => (
+          <View key={v.id} style={[s.card, v.principal && s.cardPrincipal]}>
+            <View style={s.cardIcon}>
+              <Text style={{fontSize:20}}>🚗</Text>
             </View>
-          ))}
-        </Animated.View>
+            <View style={s.cardInfo}>
+              <Text style={s.cardApelido}>{v.apelido}</Text>
+              <Text style={s.cardModelo}>{v.modelo}{v.placa ? ` · ${v.placa}` : ''}</Text>
+              {v.principal && <Text style={s.principalBadge}>⭐ Principal</Text>}
+            </View>
+            <View style={s.cardActions}>
+              {!v.principal && (
+                <TouchableOpacity onPress={() => definirPrincipal(v.id)} style={s.actionBtn}>
+                  <Text style={s.actionText}>Principal</Text>
+                </TouchableOpacity>
+              )}
+              <TouchableOpacity onPress={() => handleRemover(v.id)} style={[s.actionBtn, s.actionRemove]}>
+                <Text style={[s.actionText, {color:'#FF3B5C'}]}>Remover</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        ))}
 
         {adicionando && (
-          <View style={s.formCard}>
-            <Text style={s.formTitle}>Adicionar Veículo</Text>
-            <Text style={s.inputLabel}>MODELO</Text>
-            <TouchableOpacity style={[s.inputBox, showDropdown && s.inputFocused]} onPress={() => setShowDropdown(d => !d)}>
-              <Text style={[s.inputText, !modeloSel && s.placeholder]}>{modeloSel || 'Selecione o modelo'}</Text>
-              <Text style={{color:'rgba(240,244,255,0.4)',fontSize:12}}>{showDropdown?'▲':'▼'}</Text>
+          <View style={s.addForm}>
+            <Text style={s.formTitle}>Novo Veículo</Text>
+
+            <TouchableOpacity style={s.dropdown} onPress={() => setShowDropdown(!showDropdown)}>
+              <Text style={modeloSel ? s.dropdownSelected : s.dropdownPlaceholder}>
+                {modeloSel || 'Selecionar modelo...'}
+              </Text>
+              <Text style={s.dropdownArrow}>{showDropdown ? '▲' : '▼'}</Text>
             </TouchableOpacity>
+
             {showDropdown && (
-              <View style={s.dropdown}>
-                <ScrollView style={{maxHeight:200}} nestedScrollEnabled showsVerticalScrollIndicator={false}>
-                  {MARCAS.map(m => (
-                    <TouchableOpacity key={m} style={[s.dropItem, modeloSel===m && s.dropItemActive]}
-                      onPress={() => { setModeloSel(m); setShowDropdown(false); }}>
-                      <Text style={[s.dropText, modeloSel===m && {color:'#00E5FF'}]}>{m}</Text>
-                      {modeloSel===m && <Text style={{color:'#00E5FF'}}>✓</Text>}
-                    </TouchableOpacity>
-                  ))}
-                </ScrollView>
+              <View style={s.dropdownList}>
+                {MARCAS.map(m => (
+                  <TouchableOpacity key={m} style={s.dropdownItem}
+                    onPress={() => { setModeloSel(m); setShowDropdown(false); }}>
+                    <Text style={s.dropdownItemText}>{m}</Text>
+                  </TouchableOpacity>
+                ))}
               </View>
             )}
-            <View style={[s.acoes, {marginTop:16}]}>
-              <TouchableOpacity style={s.btnCancelar} onPress={() => setAdicionando(false)}>
-                <Text style={s.btnCancelarText}>Cancelar</Text>
+
+            <TextInput
+              style={s.input}
+              placeholder="Apelido (ex: Meu BYD)"
+              placeholderTextColor="rgba(240,244,255,0.3)"
+              value={apelido}
+              onChangeText={setApelido}
+            />
+            <TextInput
+              style={s.input}
+              placeholder="Placa (opcional)"
+              placeholderTextColor="rgba(240,244,255,0.3)"
+              value={placa}
+              onChangeText={setPlaca}
+              autoCapitalize="characters"
+            />
+
+            <View style={s.formBtns}>
+              <TouchableOpacity style={s.cancelBtn} onPress={() => setAdicionando(false)}>
+                <Text style={s.cancelBtnText}>Cancelar</Text>
               </TouchableOpacity>
-              <TouchableOpacity style={[s.btnSalvar, !modeloSel && {opacity:0.4}]} onPress={adicionar}>
-                <Text style={s.btnSalvarText}>Adicionar</Text>
+              <TouchableOpacity style={s.saveBtn} onPress={handleAdicionar}>
+                <Text style={s.saveBtnText}>Salvar</Text>
               </TouchableOpacity>
             </View>
           </View>
         )}
-
-        <View style={s.infoBox}>
-          <Text style={{fontSize:16}}>💡</Text>
-          <Text style={s.infoText}>O veículo principal é usado para calcular autonomia e alertas da ELECTRA IA.</Text>
-        </View>
-
-        <View style={{height:40}} />
       </ScrollView>
     </View>
   );
 }
 
 const s = StyleSheet.create({
-  root:   { flex:1, backgroundColor:'#070B14' },
-  scroll: { flexGrow:1, paddingHorizontal:16 },
-  header: { flexDirection:'row', alignItems:'center', justifyContent:'space-between', paddingTop:16, marginBottom:20 },
-  backBtn:{ width:36, height:36, borderRadius:18, backgroundColor:'#1A2236', borderWidth:1, borderColor:'rgba(255,255,255,0.08)', alignItems:'center', justifyContent:'center' },
-  backArrow:{ fontSize:18, color:'rgba(240,244,255,0.6)' },
-  headerTitle:{ fontFamily:'Syne-Bold', fontSize:17, color:'#F0F4FF' },
-  addBtn: { width:36, height:36, borderRadius:18, backgroundColor:'rgba(0,229,255,0.15)', borderWidth:1, borderColor:'rgba(0,229,255,0.3)', alignItems:'center', justifyContent:'center' },
-  addBtnText:{ fontSize:22, color:'#00E5FF', lineHeight:26 },
-  card:   { backgroundColor:'#111827', borderWidth:1, borderColor:'rgba(255,255,255,0.08)', borderRadius:20, padding:16, marginBottom:12 },
+  root:       { flex:1, backgroundColor:'#070B14' },
+  header:     { flexDirection:'row', alignItems:'center', paddingHorizontal:20, paddingTop:56, paddingBottom:16 },
+  backBtn:    { width:40, height:40, borderRadius:20, backgroundColor:'rgba(255,255,255,0.06)', alignItems:'center', justifyContent:'center' },
+  backIcon:   { fontSize:18, color:'#F0F4FF' },
+  headerTitle:{ flex:1, fontFamily:'Syne-Bold', fontSize:18, color:'#F0F4FF', textAlign:'center' },
+  addBtn:     { width:40, height:40, borderRadius:20, backgroundColor:'rgba(0,229,255,0.15)', alignItems:'center', justifyContent:'center' },
+  addIcon:    { fontSize:20, color:'#00E5FF' },
+  scroll:     { paddingHorizontal:20, paddingBottom:40 },
+  loadingText:{ color:'rgba(240,244,255,0.4)', textAlign:'center', marginTop:40 },
+  emptyWrap:  { alignItems:'center', paddingTop:60 },
+  emptyIcon:  { fontSize:48, marginBottom:12 },
+  emptyText:  { fontFamily:'DMSans-Regular', fontSize:16, color:'rgba(240,244,255,0.4)', marginBottom:20 },
+  emptyBtn:   { backgroundColor:'rgba(0,229,255,0.15)', borderRadius:12, paddingHorizontal:24, paddingVertical:12 },
+  emptyBtnText:{ fontFamily:'Syne-Bold', fontSize:14, color:'#00E5FF' },
+  card:       { flexDirection:'row', alignItems:'center', backgroundColor:'#111827', borderWidth:1, borderColor:'rgba(255,255,255,0.07)', borderRadius:16, padding:14, marginBottom:10 },
   cardPrincipal:{ borderColor:'rgba(0,229,255,0.3)' },
-  badge:  { backgroundColor:'rgba(255,184,0,0.12)', borderRadius:20, paddingHorizontal:10, paddingVertical:3, alignSelf:'flex-start', marginBottom:10 },
-  badgeText:{ fontFamily:'JetBrainsMono-Regular', fontSize:10, color:'#FFB800' },
-  cardTop:{ flexDirection:'row', gap:12, marginBottom:14 },
-  iconWrap:{ width:48, height:48, borderRadius:14, backgroundColor:'rgba(0,229,255,0.1)', alignItems:'center', justifyContent:'center' },
-  apelido:{ fontFamily:'Syne-Bold', fontSize:16, color:'#F0F4FF' },
-  modelo: { fontFamily:'DMSans-Regular', fontSize:13, color:'rgba(240,244,255,0.5)', marginTop:2 },
-  placa:  { fontFamily:'JetBrainsMono-Regular', fontSize:12, color:'rgba(240,244,255,0.35)', marginTop:2 },
-  batRow: { flexDirection:'row', alignItems:'center', gap:8, marginBottom:14 },
-  batLabel:{ fontFamily:'DMSans-Regular', fontSize:12, color:'rgba(240,244,255,0.4)', width:48 },
-  batTrack:{ flex:1, height:6, backgroundColor:'#1A2236', borderRadius:3, overflow:'hidden' },
-  batFill: { height:6, borderRadius:3 },
-  batPct:  { fontFamily:'JetBrainsMono-Regular', fontSize:11, width:36, textAlign:'right' },
-  acoes:   { flexDirection:'row', gap:8 },
-  btnPrincipal:{ flex:1, height:36, backgroundColor:'rgba(0,229,255,0.1)', borderWidth:1, borderColor:'rgba(0,229,255,0.25)', borderRadius:10, alignItems:'center', justifyContent:'center' },
-  btnPrincipalText:{ fontFamily:'DMSans-Regular', fontSize:12, color:'#00E5FF' },
-  btnRemover:{ height:36, paddingHorizontal:14, backgroundColor:'rgba(255,59,92,0.08)', borderWidth:1, borderColor:'rgba(255,59,92,0.2)', borderRadius:10, alignItems:'center', justifyContent:'center' },
-  btnRemoverText:{ fontFamily:'DMSans-Regular', fontSize:12, color:'#FF3B5C' },
-  formCard:{ backgroundColor:'#111827', borderWidth:1, borderColor:'rgba(0,229,255,0.2)', borderRadius:20, padding:16, marginBottom:12 },
-  formTitle:{ fontFamily:'Syne-Bold', fontSize:16, color:'#F0F4FF', marginBottom:14 },
-  inputLabel:{ fontFamily:'JetBrainsMono-Regular', fontSize:10, color:'rgba(240,244,255,0.35)', letterSpacing:2, marginBottom:6 },
-  inputBox:{ flexDirection:'row', alignItems:'center', height:50, backgroundColor:'#0D1320', borderWidth:1, borderColor:'rgba(255,255,255,0.1)', borderRadius:12, paddingHorizontal:14 },
-  inputFocused:{ borderColor:'#00E5FF' },
-  inputText:{ flex:1, fontFamily:'DMSans-Regular', fontSize:14, color:'#F0F4FF' },
-  placeholder:{ color:'rgba(240,244,255,0.2)' },
-  dropdown:{ backgroundColor:'#0D1320', borderWidth:1, borderColor:'rgba(0,229,255,0.2)', borderRadius:12, marginTop:4, overflow:'hidden' },
-  dropItem:{ paddingHorizontal:14, paddingVertical:12, flexDirection:'row', justifyContent:'space-between', alignItems:'center', borderBottomWidth:1, borderBottomColor:'rgba(255,255,255,0.04)' },
-  dropItemActive:{ backgroundColor:'rgba(0,229,255,0.08)' },
-  dropText:{ fontFamily:'DMSans-Regular', fontSize:14, color:'rgba(240,244,255,0.7)' },
-  btnCancelar:{ flex:1, height:46, borderWidth:1, borderColor:'rgba(255,255,255,0.1)', borderRadius:12, alignItems:'center', justifyContent:'center' },
-  btnCancelarText:{ fontFamily:'DMSans-Regular', fontSize:14, color:'rgba(240,244,255,0.5)' },
-  btnSalvar:{ flex:1, height:46, backgroundColor:'#00E5FF', borderRadius:12, alignItems:'center', justifyContent:'center' },
-  btnSalvarText:{ fontFamily:'Syne-Bold', fontSize:14, color:'#000' },
-  infoBox:{ flexDirection:'row', alignItems:'flex-start', gap:10, backgroundColor:'rgba(0,229,255,0.05)', borderWidth:1, borderColor:'rgba(0,229,255,0.1)', borderRadius:14, padding:14, marginTop:4 },
-  infoText:{ flex:1, fontFamily:'DMSans-Regular', fontSize:13, color:'rgba(240,244,255,0.4)', lineHeight:20 },
+  cardIcon:   { width:42, height:42, borderRadius:12, backgroundColor:'rgba(0,229,255,0.1)', alignItems:'center', justifyContent:'center', marginRight:12 },
+  cardInfo:   { flex:1 },
+  cardApelido:{ fontFamily:'Syne-Bold', fontSize:14, color:'#F0F4FF' },
+  cardModelo: { fontFamily:'DMSans-Regular', fontSize:12, color:'rgba(240,244,255,0.4)', marginTop:2 },
+  principalBadge:{ fontFamily:'DMSans-Regular', fontSize:11, color:'#00E5FF', marginTop:4 },
+  cardActions:{ gap:6 },
+  actionBtn:  { paddingHorizontal:10, paddingVertical:5, borderRadius:8, backgroundColor:'rgba(255,255,255,0.06)' },
+  actionRemove:{ backgroundColor:'rgba(255,59,92,0.1)' },
+  actionText: { fontFamily:'DMSans-Regular', fontSize:11, color:'rgba(240,244,255,0.6)' },
+  addForm:    { backgroundColor:'#111827', borderRadius:16, padding:20, marginTop:10 },
+  formTitle:  { fontFamily:'Syne-Bold', fontSize:16, color:'#F0F4FF', marginBottom:16 },
+  dropdown:   { flexDirection:'row', alignItems:'center', justifyContent:'space-between', backgroundColor:'rgba(255,255,255,0.06)', borderRadius:10, padding:14, marginBottom:10 },
+  dropdownSelected:   { fontFamily:'DMSans-Regular', fontSize:14, color:'#F0F4FF' },
+  dropdownPlaceholder:{ fontFamily:'DMSans-Regular', fontSize:14, color:'rgba(240,244,255,0.3)' },
+  dropdownArrow:{ color:'rgba(240,244,255,0.4)', fontSize:12 },
+  dropdownList:{ backgroundColor:'#1A2235', borderRadius:10, marginBottom:10, maxHeight:200 },
+  dropdownItem:{ padding:12, borderBottomWidth:1, borderBottomColor:'rgba(255,255,255,0.05)' },
+  dropdownItemText:{ fontFamily:'DMSans-Regular', fontSize:14, color:'#F0F4FF' },
+  input:      { backgroundColor:'rgba(255,255,255,0.06)', borderRadius:10, padding:14, color:'#F0F4FF', fontFamily:'DMSans-Regular', fontSize:14, marginBottom:10 },
+  formBtns:   { flexDirection:'row', gap:10, marginTop:6 },
+  cancelBtn:  { flex:1, height:44, borderRadius:10, backgroundColor:'rgba(255,255,255,0.06)', alignItems:'center', justifyContent:'center' },
+  cancelBtnText:{ fontFamily:'DMSans-Regular', fontSize:14, color:'rgba(240,244,255,0.6)' },
+  saveBtn:    { flex:1, height:44, borderRadius:10, backgroundColor:'#00E5FF', alignItems:'center', justifyContent:'center' },
+  saveBtnText:{ fontFamily:'Syne-Bold', fontSize:14, color:'#000' },
 });

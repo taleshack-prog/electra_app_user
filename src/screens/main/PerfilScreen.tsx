@@ -1,5 +1,6 @@
 import React, { useRef, useEffect, useState } from 'react';
 import { useProfile } from '../../hooks/useProfile';
+import { useVeiculos } from '../../hooks/useVeiculos';
 import {
   View, Text, TouchableOpacity, StyleSheet,
   Animated, StatusBar, ScrollView, Dimensions,
@@ -36,6 +37,7 @@ const MENU_ITEMS = [
 
 export default function PerfilScreen() {
   const { profile, loading } = useProfile();
+  const { veiculos } = useVeiculos();
   const initials = profile?.nome?.split(' ').map(n => n[0]).join('').slice(0,2).toUpperCase() || '??';
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
 
@@ -151,7 +153,7 @@ export default function PerfilScreen() {
               <Text style={styles.verTudo}>+ Adicionar</Text>
             </TouchableOpacity>
           </View>
-          {VEICULOS.map(v => (
+          {veiculos.map(v => (
             <View key={v.id} style={styles.veiculoCard}>
               <View style={styles.veiculoIcon}>
                 <Text style={styles.veiculoIconText}>🚗</Text>
