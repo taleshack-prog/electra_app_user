@@ -6,6 +6,7 @@ import {
 import { WebView } from 'react-native-webview';
 import { useNavigation } from '@react-navigation/native';
 import { useStations } from '../../hooks/useStations';
+import { useProfile } from '../../hooks/useProfile';
 import { ElectraVoice } from '../../components/voice/ElectraVoice';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../navigation';
@@ -71,6 +72,7 @@ const MAPA_HTML = `
 
 export default function HomeScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  const { profile } = useProfile();
 
   const fadeAnim  = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(20)).current;
@@ -115,7 +117,7 @@ export default function HomeScreen() {
         <Animated.View style={[styles.floatHeader, { opacity: fadeAnim }]}>
           <View style={styles.greetCard}>
             <Text style={styles.greetSub}>Olá,</Text>
-            <Text style={styles.greetName}>João 👋</Text>
+            <Text style={styles.greetName}>{profile?.nome?.split(' ')[0] || 'Usuário'} 👋</Text>
           </View>
           <TouchableOpacity style={styles.notifBtn}>
             <Text style={styles.notifIcon}>🔔</Text>
