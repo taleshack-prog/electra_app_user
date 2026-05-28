@@ -135,7 +135,7 @@ export default function MapaScreen() {
       {estacaoSelecionada && estacao && (
         <Animated.View style={[s.cardWrap, { transform:[{translateY: cardY}] }]}>
           <View style={s.card}>
-            <TouchableOpacity style={s.closeBtn} onPress={esconderCard}>
+            <TouchableOpacity style={s.closeBtn} onPress={() => { esconderCard(); const url = `https://www.google.com/maps/dir/?api=1&destination=${estacao.latitude},${estacao.longitude}`; const { Linking } = require("react-native"); Linking.openURL(url); }}>
               <Text style={s.closeBtnText}>✕</Text>
             </TouchableOpacity>
             <View style={s.cardHeader}>
@@ -154,7 +154,7 @@ export default function MapaScreen() {
               <Text style={s.infoItem}>💰 R$ {estacao.preco_kwh}/kWh</Text>
             </View>
             <View style={s.cardBtns}>
-              <TouchableOpacity style={s.btnNavegar} onPress={esconderCard}>
+              <TouchableOpacity style={s.btnNavegar} onPress={() => { esconderCard(); const url = `https://www.google.com/maps/dir/?api=1&destination=${estacao.latitude},${estacao.longitude}`; const { Linking } = require("react-native"); Linking.openURL(url); }}>
                 <Text style={s.btnNavegarText}>🗺 Navegar</Text>
               </TouchableOpacity>
               <TouchableOpacity
