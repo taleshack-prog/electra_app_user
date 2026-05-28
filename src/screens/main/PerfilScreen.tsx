@@ -222,7 +222,7 @@ export default function PerfilScreen() {
 
         {/* Logout */}
         <Animated.View style={[{ opacity: fadeAnim, paddingHorizontal: 0, marginBottom: 20 }]}>
-          <TouchableOpacity style={styles.logoutBtn}>
+          <TouchableOpacity style={styles.logoutBtn} onPress={async () => { const { supabase } = await import('../../lib/supabase'); await supabase.auth.signOut(); }}>
             <Text style={styles.logoutText}>Sair da conta</Text>
           </TouchableOpacity>
           <Text style={styles.versao}>ELECTRA Rescue v1.0.0</Text>
