@@ -11,10 +11,7 @@ import { RootStackParamList } from '../../navigation';
 
 const { width } = Dimensions.get('window');
 
-const VEICULOS = [
-  { id: '1', modelo: 'BYD Seal 03', placa: 'ABC-1234', apelido: 'Meu BYD', bateria: 42 },
-  { id: '2', modelo: 'BYD Dolphin', placa: 'XYZ-5678', apelido: 'Dolphin',  bateria: 78 },
-];
+
 
 const CONQUISTAS = [
   { icon: '⚡', nome: 'Primeiro Resgate', ok: true  },
@@ -27,7 +24,7 @@ const CONQUISTAS = [
 
 const MENU_ITEMS = [
   { icon: '🛡', label: 'Planos Rescue', sub: 'Seguro para resgates', rota: 'PlanosSeguro' },
-  { icon: '🚗', label: 'Meus Veículos',       sub: '2 veículos cadastrados', rota: 'MeusVeiculos' },
+  { icon: '🚗', label: 'Meus Veículos',       sub: `${veiculos.length} veículo(s) cadastrado(s)`, rota: 'MeusVeiculos' },
   { icon: '💳', label: 'Pagamentos', sub: 'Cartão e PIX', rota: 'Pagamentos' },
   { icon: '🔔', label: 'Notificações', sub: 'Alertas ativos', rota: 'Notificacoes' },
   { icon: '🛡', label: 'Privacidade', sub: 'LGPD · seus dados', rota: 'Privacidade' },
