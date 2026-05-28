@@ -32,16 +32,16 @@ const MAPA_HTML = `
 <div id="map"></div>
 <script>
   const map = L.map('map', { zoomControl: false, attributionControl: false })
-    .setView([-23.5558, -46.6396], 14);
+    .setView([-30.0346, -51.2177], 14);
 
   L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
     maxZoom: 19,
   }).addTo(map);
 
   const estacoes = [
-    { lat: -23.5614, lng: -46.6560, nome: 'Eletroposto Central', status: 'livre',   kw: '150kW' },
-    { lat: -23.5489, lng: -46.6388, nome: 'BYD Charge Hub',      status: 'ocupado', kw: '22kW'  },
-    { lat: -23.5700, lng: -46.6470, nome: 'EV Station Plus',      status: 'livre',   kw: '50kW'  },
+    { lat: -30.0280, lng: -51.2190, nome: "Eletroposto Moinhos", status: "livre", kw: "150kW" },
+    { lat: -30.0410, lng: -51.2050, nome: "BYD Charge Beira-Rio", status: "ocupado", kw: "22kW" },
+    { lat: -30.0520, lng: -51.2300, nome: "EV Station Iguatemi", status: "livre", kw: "50kW" },
   ];
 
   estacoes.forEach(e => {
@@ -64,7 +64,7 @@ const MAPA_HTML = `
     iconSize: [16, 16],
     iconAnchor: [8, 8],
   });
-  L.marker([-23.5558, -46.6396], { icon: userIcon }).addTo(map);
+  L.marker([-30.0346, -51.2177], { icon: userIcon }).addTo(map);
 </script>
 </body>
 </html>
