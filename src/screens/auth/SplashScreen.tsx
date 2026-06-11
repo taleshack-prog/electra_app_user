@@ -102,3 +102,4 @@ const styles = StyleSheet.create({
   barTrack:      { width: 180, height: 2, backgroundColor: 'rgba(255,255,255,0.08)', borderRadius: 1, overflow: 'hidden' },
   barFill:       { height: 2, backgroundColor: '#00E5FF', borderRadius: 1 },
 });
+// qui 11 jun 2026 18:42:43 -03
