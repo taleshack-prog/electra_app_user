@@ -1,47 +1,47 @@
 import { useState, useEffect } from 'react';
-import { supabase } from '../lib/supabase';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import electraApi from '../lib/api';
 
 export interface Profile {
   id: string;
   nome: string;
+  name?: string;
   email: string;
   telefone?: string;
-  avatar_url?: string;
+  phone?: string;
   nivel?: string;
+  level?: string;
   pontos?: number;
-  total_recargas?: number;
-  kwh_total?: number;
+  points?: number;
 }
 
 export function useProfile() {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    fetchProfile();
-  }, []);
+  useEffect(() => { fetchProfile(); }, []);
 
   const fetchProfile = async () => {
     setLoading(true);
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) { setLoading(false); return; }
-
-    const { data } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', user.id)
-      .single();
-
-    if (data) {
-      setProfile(data);
-    } else {
-      // fallback com dados do auth
-      setProfile({
-        id: user.id,
-        nome: user.user_metadata?.nome || user.email?.split('@')[0] || 'Usuário',
-        email: user.email || '',
-      });
-    }
+    try {
+      const token = await AsyncStorage.getItem('electra_token');
+      const savedUser = await AsyncStorage.getItem('electra_user');
+      if (token && savedUser) {
+        const user = JSON.parse(savedUser);
+        setProfile({
+          id: user.id,
+          nome: user.name || user.nome || user.email?.split('@')[0] || 'Usuário',
+          name: user.name,
+          email: user.email || '',
+          telefone: user.phone,
+          phone: user.phone,
+          nivel: user.level || 'Bronze',
+          level: user.level,
+          pontos: user.points || 0,
+          points: user.points,
+        });
+      }
+    } catch {}
     setLoading(false);
   };
 

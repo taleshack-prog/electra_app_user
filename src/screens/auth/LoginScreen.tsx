@@ -6,9 +6,10 @@ import {
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../navigation';
-import { supabase } from '../../lib/supabase';
+import { useAuth } from '../../hooks/useAuth';
 
 export default function LoginScreen() {
+  const { signIn } = useAuth();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const [email, setEmail]               = useState('');
   const [senha, setSenha]               = useState('');
@@ -33,7 +34,7 @@ export default function LoginScreen() {
       return;
     }
     setLoading(true);
-    const { error } = await supabase.auth.signInWithPassword({ email, password: senha });
+    const { error } = await signIn(email, senha);
     setLoading(false);
     if (error) {
       Alert.alert('Erro ao entrar', error.message);

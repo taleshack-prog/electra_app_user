@@ -4,7 +4,7 @@ import {
   Animated, Modal, NativeModules, Alert,
 } from 'react-native';
 import { ANTHROPIC_KEY } from '../../config/keys';
-import { supabase } from '../../lib/supabase';
+import electraApi from '../../lib/api';
 
 const { SpeechModule } = NativeModules;
 const ANTHROPIC_API_KEY = ANTHROPIC_KEY;
@@ -59,7 +59,7 @@ export const ElectraVoice: React.FC = () => {
   // Carrega estações reais do Supabase
   useEffect(() => {
     const carregarEstacoes = async () => {
-      const { data } = await supabase.from('charging_stations').select('*').order('nome');
+      const { stations: data } = await electraApi.getEstacoes();
       if (data) setEstacoes(data);
     };
     carregarEstacoes();

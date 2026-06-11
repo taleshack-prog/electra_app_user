@@ -5,7 +5,7 @@ import {
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../navigation';
-import { supabase } from '../../lib/supabase';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const { width, height } = Dimensions.get('window');
 
@@ -46,9 +46,9 @@ export default function SplashScreen() {
       ]),
     ]).start(async () => {
       try {
-        const { data: { session } } = await supabase.auth.getSession();
+        const token = await AsyncStorage.getItem('electra_token');
         setTimeout(() => {
-          if (session) {
+          if (token) {
             navigation.replace('MainTabs');
           } else {
             navigation.replace('Onboarding1');

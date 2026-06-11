@@ -1,45 +1,22 @@
 import { useState } from 'react';
-import { supabase } from '../lib/supabase';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import electraApi from '../lib/api';
 
 export function useSOS() {
   const [loading, setLoading] = useState(false);
-  const [error, setError]     = useState<string | null>(null);
 
-  const criarSOS = async (dados: {
-    latitude: number;
-    longitude: number;
-    endereco: string;
-    veiculo: string;
-    bateria_nivel: number;
-  }) => {
+  const criarSOS = async (latitude: number, longitude: number, address?: string, description?: string) => {
     setLoading(true);
-    setError(null);
-
-    const { data, error } = await supabase
-      .from('rescue_requests')
-      .insert([{
-        latitude: dados.latitude,
-        longitude: dados.longitude,
-        endereco: dados.endereco,
-        veiculo: dados.veiculo,
-        bateria_nivel: dados.bateria_nivel,
-        status: 'aguardando',
-        valor: 85.00,
-      }])
-      .select()
-      .single();
-
-    setLoading(false);
-    if (error) { setError(error.message); return null; }
-    return data;
+    try {
+      const token = await AsyncStorage.getItem('electra_token');
+      const data = await electraApi.createSOS(token || '', { latitude, longitude, address, description });
+      setLoading(false);
+      return data;
+    } catch(e) {
+      setLoading(false);
+      return { error: 'Erro ao criar SOS' };
+    }
   };
 
-  const cancelarSOS = async (id: string) => {
-    await supabase
-      .from('rescue_requests')
-      .update({ status: 'cancelado' })
-      .eq('id', id);
-  };
-
-  return { criarSOS, cancelarSOS, loading, error };
+  return { criarSOS, loading };
 }

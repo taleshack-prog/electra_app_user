@@ -7,9 +7,10 @@ import {
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../navigation';
-import { supabase } from '../../lib/supabase';
+import { useAuth } from '../../hooks/useAuth';
 
 export default function CadastroScreen() {
+  const { signUp } = useAuth();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
 
   const [nome, setNome]   = useState('');
@@ -63,7 +64,12 @@ export default function CadastroScreen() {
       return;
     }
     setLoading(true);
-    const { data, error } = await supabase.auth.signUp({
+    const { error } = await signUp(nome, email, senha, tel);
+    if (!error) {
+      navigation.navigate('SetupVeiculo');
+      return;
+    }
+    if (false) { const data = null; // substituído
       email,
       password: senha,
       options: {
@@ -75,16 +81,7 @@ export default function CadastroScreen() {
       Alert.alert('Erro ao cadastrar', error.message);
       return;
     }
-    // Cria perfil na tabela profiles
-    if (data.user) {
-      await supabase.from('profiles').upsert({
-        id: data.user.id,
-        nome,
-        email,
-        telefone: tel,
-      });
-    }
-    navigation.navigate('SetupVeiculo');
+    
   };
 
   return (

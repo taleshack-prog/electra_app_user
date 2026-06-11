@@ -1,49 +1,50 @@
 import { useState, useEffect } from 'react';
-import { supabase } from '../lib/supabase';
+import electraApi from '../lib/api';
 
 export interface Station {
   id: string;
   nome: string;
+  name?: string;
   endereco: string;
-  tipo: string;
-  potencia_kw: number;
-  preco_kwh: number;
-  conectores_total: number;
-  conectores_livres: number;
-  status: string;
+  address?: string;
   latitude: number;
   longitude: number;
+  status: string;
+  potencia_kw?: number;
+  powerKw?: number;
+  preco_kwh?: number;
+  pricePerKwh?: number;
+  tipo?: string;
+  type?: string;
+  conectores_livres?: number;
 }
 
 export function useStations() {
   const [stations, setStations] = useState<Station[]>([]);
-  const [loading, setLoading]   = useState(true);
-  const [error, setError]       = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    fetchStations();
-
-    // Realtime — atualiza quando status muda
-    const channel = supabase
-      .channel('stations')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'charging_stations' }, () => {
-        fetchStations();
-      })
-      .subscribe();
-
-    return () => { supabase.removeChannel(channel); };
-  }, []);
+  useEffect(() => { fetchStations(); }, []);
 
   const fetchStations = async () => {
-    const { data, error } = await supabase
-      .from('charging_stations')
-      .select('*')
-      .order('nome');
-
-    if (error) setError(error.message);
-    if (data)  setStations(data);
+    setLoading(true);
+    try {
+      const data = await electraApi.getEstacoes();
+      if (data.stations) {
+        setStations(data.stations.map((s: any) => ({
+          ...s,
+          nome: s.name || s.nome,
+          endereco: s.address || s.endereco || '',
+          potencia_kw: s.powerKw || s.potencia_kw,
+          preco_kwh: s.pricePerKwh || s.preco_kwh,
+          tipo: s.type || s.tipo || 'AC',
+          conectores_livres: s.status === 'available' ? 1 : 0,
+        })));
+      }
+    } catch(e) {
+      console.error('useStations error:', e);
+    }
     setLoading(false);
   };
 
-  return { stations, loading, error, refresh: fetchStations };
+  return { stations, loading, refetch: fetchStations };
 }

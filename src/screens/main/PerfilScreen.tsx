@@ -219,7 +219,7 @@ export default function PerfilScreen() {
 
         {/* Logout */}
         <Animated.View style={[{ opacity: fadeAnim, paddingHorizontal: 0, marginBottom: 20 }]}>
-          <TouchableOpacity style={styles.logoutBtn} onPress={async () => { const { supabase } = await import('../../lib/supabase'); await supabase.auth.signOut(); }}>
+          <TouchableOpacity style={styles.logoutBtn} onPress={async () => { const { useAuth } = require('../../hooks/useAuth'); await require('@react-native-async-storage/async-storage').default.multiRemove(['electra_token','electra_user']); }}>
             <Text style={styles.logoutText}>Sair da conta</Text>
           </TouchableOpacity>
           <Text style={styles.versao}>ELECTRA Rescue v1.0.0</Text>
